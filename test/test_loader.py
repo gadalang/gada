@@ -1,4 +1,4 @@
-__all__ = ["RunnerTestCase"]
+__all__ = ["LoaderTestCase"]
 import os
 import sys
 import yaml
@@ -6,7 +6,7 @@ import unittest
 from gada import loader
 
 
-class RunnerTestCase(unittest.TestCase):
+class LoaderTestCase(unittest.TestCase):
     def test_load(self):
         """Test loading python runner."""
         runner = loader.load_runner("python")
