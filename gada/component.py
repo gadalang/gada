@@ -19,7 +19,9 @@ def load(name: str):
 
         return importlib.import_module(name)
     except Exception as e:
-        raise Exception("component {} not found, verify it is installed".format(name)) from e
+        raise Exception(
+            "component {} not found, verify it is installed".format(name)
+        ) from e
 
 
 def load_config(comp) -> dict:
@@ -32,13 +34,17 @@ def load_config(comp) -> dict:
     """
     try:
         import os
-        
+
         config_path = os.path.join(os.path.dirname(comp.__file__), "config.yml")
 
         with open(config_path, "r") as f:
             import yaml
 
-            return yaml.safe_load(f.read())
+            # Parse configuration
+            config = yaml.safe_load(f.read())
+
+            # yaml.safe_load returns None if file is empty
+            return config if config is not None else {}
     except Exception as e:
         raise Exception("could not load component configuration") from e
 
@@ -60,11 +66,9 @@ def get_node_config(config: dict, node: str) -> dict:
     node_config = {
         "runner": config.get("runner", None),
         "cwd": config.get("cwd", None),
-        "env": config.get("env", {})
+        "env": config.get("env", {}),
     }
 
-    node_config.update(
-        nodes[node]
-    )
+    node_config.update(nodes[node])
 
     return node_config

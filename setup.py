@@ -37,10 +37,9 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=["tests"]),
     entry_points={
-        'console_scripts': ['gada=gada:main'],
+        "console_scripts": ["gada=gada:main"],
     },
-    install_requires=[
-    ],
+    install_requires=[],
     test_suite="test",
     tests_require=["nose", "nose-cover3"],
     include_package_data=True,

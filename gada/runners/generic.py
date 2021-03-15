@@ -31,11 +31,7 @@ class Runner(RunnerBase):
         command = command.replace(r"${file}", node_config["file"])
 
         proc = subprocess.Popen(
-            command,
-            env=env,
-            shell=True,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE
+            command, env=env, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE
         )
 
         stdouts, stderrs = proc.communicate()

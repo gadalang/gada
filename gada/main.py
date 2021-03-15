@@ -24,7 +24,7 @@ def run(command: str, options: Optional[List] = None):
     os.environ["GADAHOME"] = "F:/component-programming/gada"
 
     # Check command format
-    args = command.split('.')
+    args = command.split(".")
     if len(args) != 2:
         raise Exception("invalid command {}".format(command))
 
@@ -32,11 +32,8 @@ def run(command: str, options: Optional[List] = None):
     c = component.load(args[0])
 
     # Load node configuration
-    config = component.get_node_config(
-        component.load_config(c),
-        args[1]
-    )
-    
+    config = component.get_node_config(component.load_config(c), args[1])
+
     # Load correct runner
     if "runner" not in config:
         raise Exception("no configured runner")
@@ -53,9 +50,7 @@ def main(argv=None):
     argv = sys.argv if argv is None else argv
 
     parser = argparse.ArgumentParser(prog="Service", description="Help")
-    parser.add_argument(
-        "command", type=str, help="command name"
-    )
+    parser.add_argument("command", type=str, help="command name")
     parser.add_argument(
         "options", type=str, nargs=argparse.REMAINDER, help="command options"
     )

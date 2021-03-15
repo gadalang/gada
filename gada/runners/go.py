@@ -29,7 +29,7 @@ class Runner(RunnerBase):
             env=env,
             shell=True,
             stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE
+            stdout=subprocess.PIPE,
         )
 
         stdouts, stderrs = proc.communicate()
