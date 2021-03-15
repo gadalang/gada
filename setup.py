@@ -39,7 +39,7 @@ setup(
     entry_points={
         "console_scripts": ["gada=gada:main"],
     },
-    install_requires=[],
+    install_requires=["pyyaml"],
     test_suite="test",
     tests_require=["nose", "nose-cover3"],
     include_package_data=True,
