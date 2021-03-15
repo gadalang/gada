@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__all__ = ["load_plugin_modules"]
+__all__ = ["load_runner"]
 import pkgutil
 import importlib
 import pkg_resources

@@ -1,10 +1,6 @@
-# coding: utf-8
-from __future__ import annotations
-
 __all__ = ["ComponentTestCase"]
 import os
 import sys
-from typing import Any
 import yaml
 import unittest
 from gada import component
