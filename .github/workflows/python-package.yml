@@ -30,3 +30,8 @@ jobs:
     - name: Test with coverage
       run: |
         coverage run --source=gada -m unittest discover -b 
+    - if: matrix.python-version == '3.9'
+      name: Publish coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
