@@ -3,7 +3,7 @@ import os
 import sys
 import argparse
 from typing import List, Tuple, Optional
-from gada import component, loader
+from gada import component, runners
 
 
 def split_unknown_args(argv: List) -> Tuple[List, List]:
@@ -35,7 +35,7 @@ def run(command: str, options: Optional[List] = None):
     config = component.get_node_config(component.load_config(c), args[1])
 
     # Load correct runner
-    r = loader.load_runner(config.get("runner", None))
+    r = runners.load(config.get("runner", None))
 
     # Run component
     r.Runner().run(c, config, options)
