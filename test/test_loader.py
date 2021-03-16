@@ -13,11 +13,10 @@ class LoaderTestCase(unittest.TestCase):
 
         self.assertTrue(hasattr(runner, "Runner"), "invalid module")
 
-    def test_load_notfound(self):
+    def test_load_not_found(self):
         """Test loading invalid runner."""
-        runner = loader.load_runner("invalid")
-
-        self.assertIsNone(runner)
+        with self.assertRaises(Exception):
+            loader.load_runner("invalid")
 
 
 if __name__ == "__main__":

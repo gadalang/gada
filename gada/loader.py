@@ -23,4 +23,4 @@ def load_runner(name):
         if normalize(_) == name:
             return load()
 
-    return None
+    raise Exception("runner {} not found".format(name))

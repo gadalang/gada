@@ -56,10 +56,7 @@ def get_node_config(config: dict, node: str) -> dict:
     :param node: node name
     :return: node configuration
     """
-    if "nodes" not in config:
-        raise Exception("missing nodes list in configuration")
-
-    nodes = config["nodes"]
+    nodes = config.get("nodes", [])
     if node not in nodes:
         raise Exception("no node {} found in configuration".format(node))
 

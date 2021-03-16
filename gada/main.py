@@ -35,12 +35,7 @@ def run(command: str, options: Optional[List] = None):
     config = component.get_node_config(component.load_config(c), args[1])
 
     # Load correct runner
-    if "runner" not in config:
-        raise Exception("no configured runner")
-
-    r = loader.load_runner(config["runner"])
-    if not r:
-        raise Exception("runner {} not found".format(config["runner"]))
+    r = loader.load_runner(config.get("runner", None))
 
     # Run component
     r.Runner().run(c, config, options)

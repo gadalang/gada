@@ -2,3 +2,7 @@
 
 PYTHONPATH will be automatically set so Python can find this package.
 """
+
+
+def echo():
+    pass
