@@ -1,14 +1,19 @@
 """Official runner for Python code.
 """
-import os
-import importlib
 from typing import List, Optional
-from gada.runners import RunnerBase
+from gada.runners import generic
 
 
-class Runner(RunnerBase):
-    def run(self, component, node_config: dict, options: Optional[List] = None):
-        if "entrypoint" not in node_config:
-            raise Exception("missing entrypoint in configuration")
-
-        getattr(component, node_config["entrypoint"])()
+def run(
+    component, *, gada_config: dict, node_config: dict, argv: Optional[List] = None
+):
+    generic.run(
+        component=component,
+        gada_config=gada_config,
+        node_config={
+            "bin": node_config.get("bin", "python"),
+            "file": node_config["file"],
+            "env": node_config.get("env", {}),
+        },
+        argv=argv,
+    )

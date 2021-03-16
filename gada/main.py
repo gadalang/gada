@@ -3,7 +3,7 @@ import os
 import sys
 import argparse
 from typing import List, Tuple, Optional
-from gada import component, runners
+from gada import component, runners, datadir
 
 
 def split_unknown_args(argv: List) -> Tuple[List, List]:
@@ -20,43 +20,48 @@ def split_unknown_args(argv: List) -> Tuple[List, List]:
     return argv, []
 
 
-def run(command: str, options: Optional[List] = None):
-    os.environ["GADAHOME"] = "F:/component-programming/gada"
+def run(node: str, argv: Optional[List] = None):
+    """Run a node.
+
+    :param node: node to run
+    :param argv: additional CLI arguments
+    """
+    # Load gada configuration
+    gada_config = datadir.load_config()
 
     # Check command format
-    args = command.split(".")
-    if len(args) != 2:
-        raise Exception("invalid command {}".format(command))
+    node_argv = node.split(".")
+    if len(node_argv) != 2:
+        raise Exception("invalid command {}".format(node))
 
     # Load component module
-    c = component.load(args[0])
+    comp = component.load(node_argv[0])
 
     # Load node configuration
-    config = component.get_node_config(component.load_config(c), args[1])
+    node_config = component.get_node_config(component.load_config(comp), node_argv[1])
 
     # Load correct runner
-    r = runners.load(config.get("runner", None))
+    runner = runners.load(node_config.get("runner", None))
 
     # Run component
-    r.Runner().run(c, config, options)
+    runner.run(
+        component=comp, gada_config=gada_config, node_config=node_config, argv=argv
+    )
 
 
 def main(argv=None):
     argv = sys.argv if argv is None else argv
 
     parser = argparse.ArgumentParser(prog="Service", description="Help")
-    parser.add_argument("command", type=str, help="command name")
+    parser.add_argument("node", type=str, help="command name")
     parser.add_argument(
-        "options", type=str, nargs=argparse.REMAINDER, help="command options"
+        "argv", type=str, nargs=argparse.REMAINDER, help="additional CLI arguments"
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbosity level")
     args = parser.parse_args(args=argv[1:])
-    options, additional_argv = split_unknown_args(args.options)
+    node_argv, gada_argv = split_unknown_args(args.argv)
 
-    run(
-        command=args.command,
-        options=options,
-    )
+    run(node=args.node, argv=node_argv)
 
 
 if __name__ == "__main__":

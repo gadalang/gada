@@ -11,7 +11,7 @@ class RunnersTestCase(unittest.TestCase):
         """Test loading python runner."""
         runner = runners.load("python")
 
-        self.assertTrue(hasattr(runner, "Runner"), "invalid module")
+        self.assertTrue(hasattr(runner, "run"), "invalid module")
 
     def test_load_not_found(self):
         """Test loading invalid runner."""

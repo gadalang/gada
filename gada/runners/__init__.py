@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-__all__ = ["RunnerBase", "load"]
-from abc import ABC, abstractmethod
+__all__ = ["run", "load"]
 
 
-class RunnerBase(ABC):
-    """Base class for runners."""
+def run(component, *, gada_config, node_config, options):
+    """Run a node.
 
-    @abstractmethod
-    def run(self, component, node_config, options):
-        """Run a node.
-
-        :param component: loaded component
-        :param node_config: node configuration
-        :param options: run options
-        :return: outputs
-        """
-        raise NotImplementedError()
+    :param component: loaded component
+    :param gada_config: gada configuration
+    :param node_config: node configuration
+    :param options: run options
+    :return: outputs
+    """
+    raise NotImplementedError()
 
 
 def load(name: str):
