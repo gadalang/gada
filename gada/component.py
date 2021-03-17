@@ -32,7 +32,7 @@ def get_dir(comp) -> str:
     This is the same as:
 
     .. code-block:: python
-    
+
         os.path.abspath(os.path.dirname(comp.__file__))
 
     :param comp: loaded component

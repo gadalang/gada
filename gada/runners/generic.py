@@ -35,9 +35,7 @@ def get_command_format() -> str:
     return r"${bin} ${file} ${argv}"
 
 
-def run(
-    comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = None
-):
+def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = None):
     """
     :param comp: loaded component
     :param gada_config: gada configuration

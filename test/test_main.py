@@ -12,7 +12,7 @@ class MainTestCase(TestCaseBase):
         self.write_config(TestCaseBase.CONFIG_NODES)
 
         # Call node
-        self.main(["testnodes.echo"])
+        self.main(["testnodes.helloworld"])
 
     def test_main_invalid_command(self):
         """Test calling main with an invalid command."""
@@ -25,20 +25,20 @@ class MainTestCase(TestCaseBase):
         self.write_config(TestCaseBase.CONFIG_NO_RUNNER)
 
         with self.assertRaises(Exception):
-            self.main(["testnodes.echo"])
+            self.main(["testnodes.helloworld"])
 
     def test_main_unknown_runner(self):
         """Test calling main with an unknown runner."""
         self.write_config(TestCaseBase.CONFIG_UNKNOWN_RUNNER)
 
         with self.assertRaises(Exception):
-            self.main(["testnodes.echo"])
+            self.main(["testnodes.helloworld"])
 
     def test_main_remainder_args(self):
         """Test calling main with remainder args."""
         self.write_config(TestCaseBase.CONFIG_NODES)
 
-        self.main(["testnodes.echo", "a", "--", "b"])
+        self.main(["testnodes.helloworld", "a", "--", "b"])
 
 
 if __name__ == "__main__":

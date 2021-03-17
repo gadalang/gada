@@ -9,7 +9,7 @@ from gada import runners
 class RunnersTestCase(unittest.TestCase):
     def test_load(self):
         """Test loading python runner."""
-        runner = runners.load("python")
+        runner = runners.load("generic")
 
         self.assertTrue(hasattr(runner, "run"), "invalid module")
 

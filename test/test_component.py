@@ -13,15 +13,16 @@ class ComponentTestCase(TestCaseBase):
         # Load component configuration
         config = self.write_config_and_load(TestCaseBase.CONFIG_NODES)
 
-        self.assertEquals(config["runner"], "python", "incorrect configuration")
+        self.assertEqual(config["runner"], "generic", "incorrect configuration")
 
         # Get node configuration
-        node_config = component.get_node_config(config, "echo")
+        node_config = component.get_node_config(config, "helloworld")
 
-        self.assertEquals(
-            node_config["runner"], "python", "incorrect node configuration"
+        self.assertEqual(
+            node_config["runner"], "generic", "incorrect node configuration"
         )
-        self.assertEquals(
+        self.assertEqual(node_config["bin"], "python", "incorrect node configuration")
+        self.assertEqual(
             node_config["file"], "__init__.py", "incorrect node configuration"
         )
 
@@ -34,7 +35,7 @@ class ComponentTestCase(TestCaseBase):
         """Test loading config.yml file from gadalang_testnodes package."""
         config = self.write_config_and_load(TestCaseBase.CONFIG_NO_NODES)
 
-        self.assertEquals(
+        self.assertEqual(
             config, TestCaseBase.CONFIG_NO_NODES, "incorrect loaded configuration"
         )
 

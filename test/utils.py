@@ -11,17 +11,17 @@ class TestCaseBase(unittest.TestCase):
     CONFIG_YML = os.path.join(
         os.path.dirname(__file__), FULL_PACKAGE_NAME, "config.yml"
     )
-    CONFIG_NO_NODES = {"runner": "python"}
+    CONFIG_NO_NODES = {"runner": "generic"}
     CONFIG_NO_RUNNER = {
-        "nodes": {"echo": {"file": "__init__.py", "entrypoint": "echo"}}
+        "nodes": {"helloworld": {"bin": "python", "file": "__init__.py"}}
     }
     CONFIG_UNKNOWN_RUNNER = {
         "runner": "unknown",
-        "nodes": {"echo": {"file": "__init__.py", "entrypoint": "echo"}},
+        "nodes": {"helloworld": {"bin": "python", "file": "__init__.py"}},
     }
     CONFIG_NODES = {
-        "runner": "python",
-        "nodes": {"echo": {"file": "__init__.py", "entrypoint": "echo"}},
+        "runner": "generic",
+        "nodes": {"helloworld": {"bin": "python", "file": "__init__.py"}},
     }
 
     def write_config(self, value):
@@ -37,7 +37,7 @@ class TestCaseBase(unittest.TestCase):
     def load_config(self):
         # Load component
         comp = component.load(TestCaseBase.PACKAGE_NAME)
-        self.assertEquals(
+        self.assertEqual(
             comp.__name__, TestCaseBase.FULL_PACKAGE_NAME, "invalid package returned"
         )
 

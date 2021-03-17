@@ -44,9 +44,7 @@ def run(node: str, argv: Optional[List] = None):
     runner = runners.load(node_config.get("runner", None))
 
     # Run component
-    runner.run(
-        comp=comp, gada_config=gada_config, node_config=node_config, argv=argv
-    )
+    runner.run(comp=comp, gada_config=gada_config, node_config=node_config, argv=argv)
 
 
 def main(argv=None):

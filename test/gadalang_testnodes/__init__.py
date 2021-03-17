@@ -6,7 +6,7 @@ import sys
 
 
 def main(argv=None):
-    print(argv)
+    print("hello world !")
 
 
 if __name__ == "__main__":
