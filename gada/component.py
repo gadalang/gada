@@ -2,7 +2,11 @@
 
 Those nodes may be written in any language, but the component must be
 a python package installed in site-packages.
+
+All components must be python packages prefixed by gadalang_ to clearly
+identify them.
 """
+import os
 from typing import Optional
 
 
@@ -17,11 +21,24 @@ def load(name: str):
     try:
         import importlib
 
-        return importlib.import_module(name)
+        return importlib.import_module(f"gadalang_{name}")
     except Exception as e:
-        raise Exception(
-            "component {} not found, verify it is installed".format(name)
-        ) from e
+        raise Exception(f"component {name} not found, verify it is installed") from e
+
+
+def get_dir(comp) -> str:
+    """Get the parent directory of a component.
+
+    This is the same as:
+
+    .. code-block:: python
+    
+        os.path.abspath(os.path.dirname(comp.__file__))
+
+    :param comp: loaded component
+    :return: parent directory
+    """
+    return os.path.abspath(os.path.dirname(comp.__file__))
 
 
 def load_config(comp) -> dict:
@@ -33,8 +50,6 @@ def load_config(comp) -> dict:
     :return: config as dict
     """
     try:
-        import os
-
         config_path = os.path.join(os.path.dirname(comp.__file__), "config.yml")
 
         with open(config_path, "r") as f:
@@ -58,7 +73,7 @@ def get_node_config(config: dict, node: str) -> dict:
     """
     nodes = config.get("nodes", [])
     if node not in nodes:
-        raise Exception("no node {} found in configuration".format(node))
+        raise Exception(f"no node {node} found in configuration")
 
     node_config = {
         "runner": config.get("runner", None),

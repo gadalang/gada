@@ -32,7 +32,7 @@ def run(node: str, argv: Optional[List] = None):
     # Check command format
     node_argv = node.split(".")
     if len(node_argv) != 2:
-        raise Exception("invalid command {}".format(node))
+        raise Exception(f"invalid command {node}")
 
     # Load component module
     comp = component.load(node_argv[0])
@@ -45,7 +45,7 @@ def run(node: str, argv: Optional[List] = None):
 
     # Run component
     runner.run(
-        component=comp, gada_config=gada_config, node_config=node_config, argv=argv
+        comp=comp, gada_config=gada_config, node_config=node_config, argv=argv
     )
 
 

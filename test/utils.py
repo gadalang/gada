@@ -6,8 +6,11 @@ from gada import component
 
 
 class TestCaseBase(unittest.TestCase):
-    PACKAGE_NAME = "gadalang_testnodes"
-    CONFIG_YML = os.path.join(os.path.dirname(__file__), PACKAGE_NAME, "config.yml")
+    PACKAGE_NAME = "testnodes"
+    FULL_PACKAGE_NAME = f"gadalang_{PACKAGE_NAME}"
+    CONFIG_YML = os.path.join(
+        os.path.dirname(__file__), FULL_PACKAGE_NAME, "config.yml"
+    )
     CONFIG_NO_NODES = {"runner": "python"}
     CONFIG_NO_RUNNER = {
         "nodes": {"echo": {"file": "__init__.py", "entrypoint": "echo"}}
@@ -35,7 +38,7 @@ class TestCaseBase(unittest.TestCase):
         # Load component
         comp = component.load(TestCaseBase.PACKAGE_NAME)
         self.assertEquals(
-            comp.__name__, TestCaseBase.PACKAGE_NAME, "invalid package returned"
+            comp.__name__, TestCaseBase.FULL_PACKAGE_NAME, "invalid package returned"
         )
 
         # Load component configuration

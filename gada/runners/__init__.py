@@ -2,10 +2,10 @@
 __all__ = ["run", "load"]
 
 
-def run(component, *, gada_config, node_config, options):
+def run(comp, *, gada_config, node_config, options):
     """Run a node.
 
-    :param component: loaded component
+    :param comp: loaded component
     :param gada_config: gada configuration
     :param node_config: node configuration
     :param options: run options
