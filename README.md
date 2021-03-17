@@ -5,7 +5,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/gadalang/gada/issues)
 
-gada is a python package and CLI that let you run code written in any language through a common interface.
+gada is a python package and command line tool that let you run code written in any language through a common interface.
 
 ## Why
 
