@@ -2,7 +2,7 @@ __all__ = ["MainTestCase"]
 import os
 import sys
 import unittest
-from .utils import TestCaseBase
+from test.utils import TestCaseBase
 
 
 class MainTestCase(TestCaseBase):

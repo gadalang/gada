@@ -4,7 +4,7 @@ import sys
 import yaml
 import unittest
 from gada import component
-from .utils import TestCaseBase
+from test.utils import TestCaseBase
 
 
 class ComponentTestCase(TestCaseBase):
