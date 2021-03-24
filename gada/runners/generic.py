@@ -66,24 +66,21 @@ def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = No
     command = command.replace(r"${file}", file_path)
     command = command.replace(r"${argv}", " ".join(argv))
 
-    async def stream(stdin, stdout):
+    async def _pipe(_stdin, _stdout):
         """Pipe content of stdin to stdout until EOF.
 
         :param stdin: input stream
         :param stdout: output stream
         """
-        try:
-            while True:
-                line = await stdin.readline()
-                if not line:
-                    return
+        while True:
+            line = await _stdin.readline()
+            if not line:
+                return
 
-                stdout.buffer.write(line)
-                await stdout.drain()
-        except Exception as e:
-            pass
+            _stdout.buffer.write(line)
+            _stdout.flush()
 
-    async def run_subprocess():
+    async def _run_subprocess():
         """Run a subprocess."""
         proc = await asyncio.create_subprocess_shell(
             command,
@@ -95,11 +92,11 @@ def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = No
 
         await asyncio.wait(
             [
-                asyncio.create_task(stream(proc.stdout, sys.stdout)),
-                asyncio.create_task(stream(proc.stderr, sys.stderr)),
+                asyncio.create_task(_pipe(proc.stdout, sys.stdout)),
+                asyncio.create_task(_pipe(proc.stderr, sys.stderr)),
                 asyncio.create_task(proc.wait()),
             ],
             return_when=asyncio.ALL_COMPLETED,
         )
 
-    asyncio.get_event_loop().run_until_complete(run_subprocess())
+    asyncio.get_event_loop().run_until_complete(_run_subprocess())
