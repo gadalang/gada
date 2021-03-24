@@ -40,8 +40,6 @@ setup(
         "console_scripts": ["gada=gada:main"],
     },
     install_requires=["pyyaml"],
-    test_suite="test",
-    tests_require=["nose", "nose-cover3"],
     include_package_data=True,
     zip_safe=False,
     python_requires=">=3.7",
