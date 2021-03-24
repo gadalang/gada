@@ -28,10 +28,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e .
-        python -m pip install wheel "coverage>=4.0,<4.4"
+        python -m pip install wheel tox tox-gh-actions
     - name: Test with coverage
       run: |
-        coverage run --source=gada -m unittest discover -b 
+        tox -e begin
+        tox
+        tox -e end
     - if: matrix.python-version == '3.8'
       name: Publish coverage
       uses: codecov/codecov-action@v1
