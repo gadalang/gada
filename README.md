@@ -18,7 +18,7 @@ gada is a python package and command line tool that let you run code written in 
 Using pip:
 
 ```bash
-pip install gada
+$ pip3 install gada
 ```
 
 ## Documentation
