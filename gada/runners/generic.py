@@ -12,24 +12,24 @@ from gada import component
 def get_bin_path(bin: str, *, gada_config: dict) -> str:
     """Get a binary path from gada configuration:
 
-    .. code-block:: bash
+    .. code-block:: python
 
-        >>> import os
-        >>> import gada
-        >>>
-        >>> # Overwrite "{datadir}/config.yml"
-        >>> with open(os.path.join(gada.datadir.path(), 'config.yml'), 'w+') as f:
-        ...     f.write('''
-        ...     bins:
-        ...       python: /path/to/python
-        ...     ''')
+        >> import os
+        >> import gada
+        >>
+        >> # Overwrite "{datadir}/config.yml"
+        >> with open(os.path.join(gada.datadir.path(), 'config.yml'), 'w+') as f:
+        ..     f.write('''
+        ..     bins:
+        ..       python: /path/to/python
+        ..     ''')
         45
-        >>> # Load configuration
-        >>> config = gada.datadir.load_config()
-        >>> # Get path for "python" bin
-        >>> gada.runners.generic.get_bin_path('python', gada_config=config)
+        >> # Load configuration
+        >> config = gada.datadir.load_config()
+        >> # Get path for "python" bin
+        >> gada.runners.generic.get_bin_path('python', gada_config=config)
         '/path/to/python'
-        >>>
+        >>
 
     If there is no custom path in gada configuration for this
     binary, then :py:attr:`bin` is returned.
