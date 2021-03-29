@@ -21,17 +21,20 @@ Using pip:
 pip install gada
 ```
 
-You can show help with `gada --help`:
+## Documentation
 
-```
-todo
+Build the doc with:
 
+```bash
+$ make html
 ```
+
+You can find the latest documentation on [gada.readthedocs.io](https://gada.readthedocs.io/).
 
 ## Testing
 
 The `test` directory contains many tests that you can run with:
 
 ```python
-tox .
+$ tox .
 ```
