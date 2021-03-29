@@ -21,7 +21,14 @@ def split_unknown_args(argv: List) -> Tuple[List, List]:
 
 
 def run(node: str, argv: Optional[List] = None):
-    """Run a node.
+    """Run a gada node:
+
+    .. code-block:: python
+
+        >> import gada
+        >>
+        >> gada.run("mycomponent.mynode", ["arg1", "arg2", ...])
+        >>
 
     :param node: node to run
     :param argv: additional CLI arguments
@@ -48,6 +55,10 @@ def run(node: str, argv: Optional[List] = None):
 
 
 def main(argv=None):
+    """Gada main.
+
+    :param argv: command line arguments
+    """
     argv = sys.argv if argv is None else argv
 
     parser = argparse.ArgumentParser(prog="Service", description="Help")
