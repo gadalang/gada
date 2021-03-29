@@ -12,7 +12,7 @@ from gada import component
 def get_bin_path(bin: str, *, gada_config: dict) -> str:
     """Get a binary path from gada configuration:
 
-    .. code-block:: python
+    .. code-block:: bash
 
         >>> import os
         >>> import gada

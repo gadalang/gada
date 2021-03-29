@@ -12,7 +12,15 @@ from typing import Optional
 
 
 def load(name: str):
-    """Load a component installed in site-packages.
+    r"""Load a component installed in site-packages:
+
+    .. code-block:: bash
+
+        >>> import gada
+        >>>
+        >>> gada.component.load("testnodes")
+        <module 'gadalang_testnodes' from '...\\gada\\test\\gadalang_testnodes\\__init__.py'>
+        >>>
 
     This will raise an exception if no component is found.
 
@@ -28,7 +36,27 @@ def load(name: str):
 
 
 def get_dir(comp) -> str:
-    """Get the parent directory of a component.
+    r"""Get the parent directory of a component:
+
+    .. code-block:: bash
+
+        >>> import gada
+        >>>
+        >>> comp = gada.component.load("testnodes")
+        >>> gada.component.get_dir(comp)
+        # '...\\gada\\test\\gadalang_testnodes'
+        >>>
+
+    This is the same as:
+
+    .. code-block:: bash
+
+        >>> import gada
+        >>>
+        >>> comp = gada.component.load("testnodes")
+        >>> os.path.abspath(os.path.dirname(comp.__file__))
+        # '...\\gada\\test\\gadalang_testnodes'
+        >>>
 
     :param comp: loaded component
     :return: parent directory
