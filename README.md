@@ -9,10 +9,6 @@
 
 gada is a python package and command line tool that let you run code written in any language through a common interface.
 
-## Why
-
-
-
 ## Install
 
 Using pip:
