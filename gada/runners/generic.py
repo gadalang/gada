@@ -1,5 +1,6 @@
-"""Official runner for generic code.
+"""Generic runner that can run any command line.
 """
+__all__ = ["get_bin_path", "get_command_format", "run"]
 import os
 import sys
 import asyncio
@@ -9,7 +10,26 @@ from gada import component
 
 
 def get_bin_path(bin: str, *, gada_config: dict) -> str:
-    """Get a binary path from gada configuration.
+    """Get a binary path from gada configuration:
+
+    .. code-block:: python
+
+        >>> import os
+        >>> import gada
+        >>>
+        >>> # Overwrite "{datadir}/config.yml"
+        >>> with open(os.path.join(gada.datadir.path(), 'config.yml'), 'w+') as f:
+        ...     f.write('''
+        ...     bins:
+        ...       python: /path/to/python
+        ...     ''')
+        45
+        >>> # Load configuration
+        >>> config = gada.datadir.load_config()
+        >>> # Get path for "python" bin
+        >>> gada.runners.generic.get_bin_path('python', gada_config=config)
+        '/path/to/python'
+        >>>
 
     If there is no custom path in gada configuration for this
     binary, then :py:attr:`bin` is returned.
@@ -22,13 +42,15 @@ def get_bin_path(bin: str, *, gada_config: dict) -> str:
 
 
 def get_command_format() -> str:
-    """Get the generic command format for CLI.
+    r"""Get the generic command format for CLI:
 
-    The default format is:
+    .. code-block:: python
 
-    .. code-block:: bash
-
-        ${bin} ${file} ${argv}
+        >>> import gada
+        >>>
+        >>> gada.runners.generic.get_command_format()
+        '${bin} ${file} ${argv}'
+        >>>
 
     :return: command format
     """
@@ -36,21 +58,37 @@ def get_command_format() -> str:
 
 
 def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = None):
-    """
+    """Run a generic command:
+
+    .. code-block:: python
+
+        >>> import gada
+        >>>
+        >>> comp = gada.component.load('testnodes')
+        >>> with open(os.path.join(gada.component.get_dir(comp), 'config.yml'), 'w+') as f:
+        ...     f.write('''
+        ...     nodes:
+        ...       mynode:
+        ...         runner: generic
+        ...         bin: ls
+        ...     ''')
+        70
+        >>> gada_config = gada.datadir.load_config()
+        >>> comp_config = gada.component.load_config(comp)
+        >>> print(comp_config)
+        {'nodes': {'mynode': {'runner': 'generic', 'bin': 'ls'}}}
+        >>> node_config = gada.component.get_node_config(comp_config, 'mynode')
+        >>> print(node_config)
+        {'runner': 'generic', 'cwd': None, 'env': {}, 'bin': 'ls'}
+        >>> #gada.runners.generic.run(comp, gada_config=gada_config, node_config=node_config)
+        >>>
+
     :param comp: loaded component
     :param gada_config: gada configuration
     :param node_config: node configuration
     :param argv: additional CLI arguments
     """
     argv = argv if argv is not None else []
-
-    # Force module to be in node_path
-    comp_path = component.get_dir(comp)
-    file_path = os.path.abspath(os.path.join(comp_path, node_config["file"]))
-    if not os.path.isfile(file_path):
-        raise Exception(f"file {node_config['file']} not found")
-    elif not file_path.startswith(comp_path):
-        raise Exception("can't run file outside of component directory")
 
     # Inherit from current env
     env = dict(os.environ)
@@ -63,7 +101,6 @@ def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = No
 
     command = node_config.get("command", get_command_format())
     command = command.replace(r"${bin}", bin_path)
-    command = command.replace(r"${file}", file_path)
     command = command.replace(r"${argv}", " ".join(argv))
 
     async def _pipe(_stdin, _stdout):
@@ -85,6 +122,7 @@ def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = No
         proc = await asyncio.create_subprocess_shell(
             command,
             env=env,
+            cwd=node_config.get("cwd", None),
             stdin=sys.stdin,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -99,4 +137,4 @@ def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = No
             return_when=asyncio.ALL_COMPLETED,
         )
 
-    asyncio.get_event_loop().run_until_complete(_run_subprocess())
+    asyncio.run(_run_subprocess())

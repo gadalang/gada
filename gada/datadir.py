@@ -9,13 +9,13 @@ import yaml
 
 
 def path() -> pathlib.Path:
-    """
-    Returns a parent directory path
-    where persistent application data can be stored.
+    """Get path to local data directory.
 
-    # linux: ~/.local/share
-    # macOS: ~/Library/Application Support
-    # windows: C:/Users/<USER>/AppData/Roaming
+    * Windows: "AppData/Roaming/Gada"
+    * Linux: ".local/share/gada"
+    * Mac: "Library/Application Support/Gada"
+
+    :return: path to local data directory
     """
     home = pathlib.Path.home()
 
@@ -28,7 +28,7 @@ def path() -> pathlib.Path:
 
 
 def load_config():
-    """Load configuration.
+    """Load ``{datadir}/config.yml`` configuration file.
 
     An empty configuration will be returned if an error occurs.
 
