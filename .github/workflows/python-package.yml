@@ -31,7 +31,7 @@ jobs:
         python -m pip install wheel tox tox-gh-actions
     - name: Test with coverage
       run: |
-        mkdir .local/share/gada
+        mkdir -p .local/share/gada
         tox -e begin
         tox
         tox -e end
