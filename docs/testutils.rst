@@ -13,3 +13,5 @@ test_utils Module
 .. automethod:: gada.test_utils::run
 
 .. automethod:: gada.test_utils::testnodes_path
+
+.. automethod:: gada.test_utils::write_testnodes_config

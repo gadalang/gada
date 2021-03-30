@@ -3,7 +3,7 @@
 """
 from __future__ import annotations
 
-__all__ = ["PipeStream", "run", "testnodes_path"]
+__all__ = ["PipeStream", "run", "testnodes_path", "write_testnodes_config"]
 import os
 import yaml
 from typing import Optional
@@ -116,5 +116,9 @@ def testnodes_path() -> str:
 
 
 def write_testnodes_config(config: dict):
+    """Overwrite ``gada/test/gadalang_testnodes/config.yml``.
+
+    :param config: new configuration
+    """
     with open(os.path.join(testnodes_path(), "config.yml"), "w+") as f:
         f.write(yaml.safe_dump(config))

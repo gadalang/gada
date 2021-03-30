@@ -45,6 +45,7 @@ Contents:
    component
    testutils
    runner
+   writing
 
 Indices and tables
 ==================
