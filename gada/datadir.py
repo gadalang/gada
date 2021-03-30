@@ -1,6 +1,8 @@
 """Manage data directory.
 """
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 __all__ = ["path", "load_config", "write_config"]
 import os
 import sys

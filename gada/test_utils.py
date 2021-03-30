@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Some utility tools used in tests.
 """
+from __future__ import annotations
+
 __all__ = ["PipeStream", "run", "testnodes_path"]
 import os
 import yaml

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Generic runner that can run any command line.
 """
+from __future__ import annotations
+
 __all__ = ["get_bin_path", "get_command_format", "run"]
 import os
 import sys

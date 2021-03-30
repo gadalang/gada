@@ -6,6 +6,8 @@ a python package installed in site-packages.
 All components must be python packages prefixed by ``gadalang_`` to clearly
 identify them.
 """
+from __future__ import annotations
+
 __all__ = ["load", "get_dir", "load_config", "get_node_config"]
 import os
 from typing import Optional

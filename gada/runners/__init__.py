@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 __all__ = ["run", "load"]
 from typing import Optional
 
