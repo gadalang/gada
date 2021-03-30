@@ -29,11 +29,36 @@ class PipeStream:
         b'hello'
         >>>
 
+    The default behavior is to open the pipe in binary mode, meaning
+    you need to write and read bytes arrays. But you can open the
+    pipe in another mode with:
+
+    .. code-block:: python
+
+        >>> import gada
+        >>>
+        >>> # Open the pipe in text mode
+        >>> with gada.test_utils.PipeStream(rmode="r", wmode="w") as stream:
+        ...     # Can write text
+        ...     stream.writer.write('hello')
+        ...     stream.writer.close()
+        ...
+        ...     # Can read text
+        ...     stream.reader.read()
+        5
+        'hello'
+        >>>
+
     """
 
-    def __init__(self):
+    def __init__(self, *, rmode=None, wmode=None, **kwargs):
+        rmode = rmode if rmode is not None else "rb"
+        wmode = wmode if wmode is not None else "wb"
+
         self._r, self._w = os.pipe()
-        self._r, self._w = os.fdopen(self._r, "rb"), os.fdopen(self._w, "wb")
+        self._r, self._w = os.fdopen(self._r, rmode, **kwargs), os.fdopen(
+            self._w, wmode, **kwargs
+        )
 
     def __enter__(self):
         return self

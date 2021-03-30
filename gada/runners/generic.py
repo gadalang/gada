@@ -74,7 +74,6 @@ def run(
 
     .. code-block:: python
 
-        >>> import io
         >>> import gada
         >>>
         >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
