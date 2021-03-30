@@ -1,12 +1,13 @@
 __all__ = ["run", "main"]
 import os
 import sys
+import io
 import argparse
-from typing import List, Tuple, Optional
+from typing import Optional
 from gada import component, runners, datadir
 
 
-def split_unknown_args(argv: List) -> Tuple[List, List]:
+def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
     """Separate known command-line arguments from unknown one.
     Unknown arguments are separated from known arguments by
     the special **--** argument.
@@ -20,18 +21,59 @@ def split_unknown_args(argv: List) -> Tuple[List, List]:
     return argv, []
 
 
-def run(node: str, argv: Optional[List] = None):
+def run(
+    node: str,
+    argv: Optional[list[str]] = None,
+    *,
+    stdin=None,
+    stdout=None,
+    stderr=None,
+):
     """Run a gada node:
 
     .. code-block:: python
 
-        >> import gada
-        >>
-        >> gada.run("mycomponent.mynode", ["arg1", "arg2", ...])
-        >>
+        >>> import gada
+        >>>
+        >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
+        >>> gada.test_utils.write_testnodes_config({
+        ...     'nodes': {
+        ...         'echo': {
+        ...             'runner': 'generic',
+        ...             'bin': 'echo'
+        ...         }
+        ...     }
+        ... })
+        >>>
+        >>> # Need to create fake stdin and stdout for unittests
+        >>> with gada.test_utils.PipeStream() as stdin:
+        ...     with gada.test_utils.PipeStream() as stdout:
+        ...         # Run node with CLI arguments
+        ...         gada.run(
+        ...             'testnodes.echo',
+        ...             ['hello'],
+        ...             stdin=stdin.reader,
+        ...             stdout=stdout.writer,
+        ...             stderr=stdout.writer
+        ...         )
+        ...
+        ...         # Close writer end so we can read form it
+        ...         stdout.writer.close()
+        ...
+        ...         # Read node output
+        ...         stdout.reader.read().decode().strip()
+        'hello'
+        >>>
+
+    The three parameters ``stdin``, ``stdout`` or ``stderr`` are provided as a convenience
+    for writing unit tests when you can't use ``sys.stdin`` or ``sys.stdout``, or simply
+    when you want to be able to read from the output.
 
     :param node: node to run
     :param argv: additional CLI arguments
+    :param stdin: input stream
+    :param stdout: output stream
+    :param stderr: error stream
     """
     # Load gada configuration
     gada_config = datadir.load_config()
@@ -51,13 +93,67 @@ def run(node: str, argv: Optional[List] = None):
     runner = runners.load(node_config.get("runner", None))
 
     # Run component
-    runner.run(comp=comp, gada_config=gada_config, node_config=node_config, argv=argv)
+    runner.run(
+        comp=comp,
+        gada_config=gada_config,
+        node_config=node_config,
+        argv=argv,
+        stdin=stdin,
+        stdout=stdout,
+        stderr=stderr,
+    )
 
 
-def main(argv=None):
-    """Gada main.
+def main(
+    argv: Optional[list[str]] = None,
+    *,
+    stdin=None,
+    stdout=None,
+    stderr=None,
+):
+    """Gada main:
+
+    .. code-block:: python
+
+        >>> import gada
+        >>>
+        >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
+        >>> gada.test_utils.write_testnodes_config({
+        ...     'nodes': {
+        ...         'echo': {
+        ...             'runner': 'generic',
+        ...             'bin': 'echo'
+        ...         }
+        ...     }
+        ... })
+        >>>
+        >>> # Need to create fake stdin and stdout for unittests
+        >>> with gada.test_utils.PipeStream() as stdin:
+        ...     with gada.test_utils.PipeStream() as stdout:
+        ...         # Run node with CLI arguments
+        ...         gada.main(
+        ...             ['gada', 'testnodes.echo', 'hello'],
+        ...             stdin=stdin.reader,
+        ...             stdout=stdout.writer,
+        ...             stderr=stdout.writer
+        ...         )
+        ...
+        ...         # Close writer end so we can read form it
+        ...         stdout.writer.close()
+        ...
+        ...         # Read node output
+        ...         stdout.reader.read().decode().strip()
+        'hello'
+        >>>
+
+    The three parameters ``stdin``, ``stdout`` or ``stderr`` are provided as a convenience
+    for writing unit tests when you can't use ``sys.stdin`` or ``sys.stdout``, or simply
+    when you want to be able to read from the output.
 
     :param argv: command line arguments
+    :param stdin: input stream
+    :param stdout: output stream
+    :param stderr: error stream
     """
     argv = sys.argv if argv is None else argv
 
@@ -70,7 +166,7 @@ def main(argv=None):
     args = parser.parse_args(args=argv[1:])
     node_argv, gada_argv = split_unknown_args(args.argv)
 
-    run(node=args.node, argv=node_argv)
+    run(node=args.node, argv=node_argv, stdin=stdin, stdout=stdout, stderr=stderr)
 
 
 if __name__ == "__main__":

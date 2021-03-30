@@ -1,15 +1,27 @@
 # -*- coding: utf-8 -*-
 __all__ = ["run", "load"]
-from typing import List, Optional
+from typing import Optional
 
 
-def run(comp, *, gada_config: dict, node_config: dict, argv: Optional[List] = None):
+def run(
+    comp,
+    *,
+    gada_config: dict,
+    node_config: dict,
+    argv: Optional[list[str]] = None,
+    stdin=None,
+    stdout=None,
+    stderr=None
+):
     """Run a node.
 
     :param comp: loaded component
     :param gada_config: gada configuration
     :param node_config: node configuration
     :param argv: additional CLI arguments
+    :param stdin: input stream
+    :param stdout: output stream
+    :param stderr: error stream
     """
     raise NotImplementedError()
 

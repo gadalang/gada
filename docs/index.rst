@@ -43,6 +43,7 @@ Contents:
    api
    datadir
    component
+   testutils
    runner
 
 Indices and tables

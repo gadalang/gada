@@ -16,14 +16,16 @@ class ComponentTestCase(TestCaseBase):
         self.assertEqual(config["runner"], "generic", "incorrect configuration")
 
         # Get node configuration
-        node_config = component.get_node_config(config, "helloworld")
+        node_config = component.get_node_config(config, "hello")
 
         self.assertEqual(
             node_config["runner"], "generic", "incorrect node configuration"
         )
         self.assertEqual(node_config["bin"], "python", "incorrect node configuration")
         self.assertEqual(
-            node_config["file"], "__init__.py", "incorrect node configuration"
+            node_config["argv"],
+            r"${comp_dir}/__init__.py ${argv}",
+            "incorrect node configuration",
         )
 
     def test_load_not_found(self):

@@ -1,7 +1,7 @@
 """Manage data directory.
 """
 # -*- coding: utf-8 -*-
-__all__ = ["path", "load_config"]
+__all__ = ["path", "load_config", "write_config"]
 import os
 import sys
 import pathlib
@@ -27,7 +27,7 @@ def path() -> pathlib.Path:
         return home / "Library" / "Application Support" / "Gada"
 
 
-def load_config():
+def load_config() -> dict:
     """Load ``{datadir}/config.yml`` configuration file.
 
     An empty configuration will be returned if an error occurs.
@@ -37,7 +37,19 @@ def load_config():
     try:
         data_dir = path()
 
-        with open(os.path.join(data_dir, "config.yml")) as f:
+        with open(os.path.join(data_dir, "config.yml"), "r", encoding="utf-8") as f:
             return yaml.safe_load(f.read())
     except Exception as e:
         return {}
+
+
+def write_config(config: dict = None):
+    """Write ``{datadir}/config.yml`` configuration file.
+
+    :return: configuration
+    """
+    data_dir = path()
+    os.makedirs(data_dir, exist_ok=True)
+
+    with open(os.path.join(data_dir, "config.yml"), "w", encoding="utf-8") as f:
+        f.write(yaml.safe_dump(config))

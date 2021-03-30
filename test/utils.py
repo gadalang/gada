@@ -1,27 +1,36 @@
+# -*- coding: utf-8 -*-
 import os
 import yaml
+import io
 import unittest
 import gada
-from gada import component
+from gada import component, test_utils
 
 
 class TestCaseBase(unittest.TestCase):
     PACKAGE_NAME = "testnodes"
     FULL_PACKAGE_NAME = f"gadalang_{PACKAGE_NAME}"
+    GADA_CONFIG = {"bins": {}}
     CONFIG_YML = os.path.join(
         os.path.dirname(__file__), FULL_PACKAGE_NAME, "config.yml"
     )
     CONFIG_NO_NODES = {"runner": "generic"}
     CONFIG_NO_RUNNER = {
-        "nodes": {"helloworld": {"bin": "python", "file": "__init__.py"}}
+        "nodes": {
+            "hello": {"bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
+        }
     }
     CONFIG_UNKNOWN_RUNNER = {
         "runner": "unknown",
-        "nodes": {"helloworld": {"bin": "python", "file": "__init__.py"}},
+        "nodes": {
+            "hello": {"bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
+        },
     }
     CONFIG_NODES = {
         "runner": "generic",
-        "nodes": {"helloworld": {"bin": "python", "file": "__init__.py"}},
+        "nodes": {
+            "hello": {"bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
+        },
     }
 
     def write_config(self, value):
@@ -48,5 +57,25 @@ class TestCaseBase(unittest.TestCase):
         self.write_config(value)
         return self.load_config()
 
-    def main(self, argv):
-        return gada.main(["gada"] + argv)
+    def main(
+        self,
+        argv: list[str] = None,
+        *,
+        has_stdout: bool = None,
+        has_stderr: bool = None,
+    ) -> tuple[str, str]:
+        # Run gada node
+        stdout, stderr = test_utils.run(argv)
+
+        # Check outputs
+        if has_stderr is False:
+            self.assertEqual(stderr, "", "should have no stderr")
+        elif has_stderr is True:
+            self.assertNotEqual(stderr, "", "should have stderr")
+        if has_stdout is False:
+            self.assertEqual(stdout, "", "should have no stdout")
+        elif has_stdout is True:
+            self.assertNotEqual(stdout, "", "should have stdout")
+
+        # Return outputs
+        return stdout.strip(), stderr.strip()

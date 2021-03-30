@@ -10,3 +10,5 @@ datadir Module
 .. automethod:: gada.datadir::path
 
 .. automethod:: gada.datadir::load_config
+
+.. automethod:: gada.datadir::write_config
