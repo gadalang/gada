@@ -89,8 +89,8 @@ def run(argv: Optional[list[str]] = None) -> tuple[str, str]:
 
     .. code-block:: python
 
-        >> import gada
-        >>
+        >>> import gada
+        >>>
         >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
         >>> gada.test_utils.write_testnodes_config({
         ...     'nodes': {
