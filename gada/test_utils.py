@@ -91,7 +91,7 @@ def run(argv: Optional[list[str]] = None) -> tuple[str, str]:
 
         >>> import gada
         >>>
-        >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
+        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
         >>> gada.test_utils.write_testnodes_config({
         ...     'nodes': {
         ...         'echo': {
@@ -131,17 +131,17 @@ def run(argv: Optional[list[str]] = None) -> tuple[str, str]:
 
 
 def testnodes_path() -> str:
-    """Get the absolute path to ``gada/test/gadalang_testnodes``.
+    """Get the absolute path to ``gada/test/testnodes``.
 
     :return: path to testnodes directory
     """
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "test", "gadalang_testnodes")
+        os.path.join(os.path.dirname(__file__), "..", "test", "testnodes")
     )
 
 
 def write_testnodes_config(config: dict):
-    """Overwrite ``gada/test/gadalang_testnodes/config.yml``.
+    """Overwrite ``gada/test/testnodes/config.yml``.
 
     :param config: new configuration
     """

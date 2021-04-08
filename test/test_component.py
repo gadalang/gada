@@ -9,7 +9,7 @@ from test.utils import TestCaseBase
 
 class ComponentTestCase(TestCaseBase):
     def test_load(self):
-        """Test loading the gadalang_testnodes package that is in PYTHONPATH."""
+        """Test loading the testnodes package that is in PYTHONPATH."""
         # Load component configuration
         config = self.write_config_and_load(TestCaseBase.CONFIG_NODES)
 
@@ -31,10 +31,10 @@ class ComponentTestCase(TestCaseBase):
     def test_load_not_found(self):
         """Test loading a package that is not in the PYTHONPATH."""
         with self.assertRaises(Exception):
-            comp = component.load("gadalang_invalid")
+            comp = component.load("invalid")
 
     def test_load_config(self):
-        """Test loading config.yml file from gadalang_testnodes package."""
+        """Test loading config.yml file from testnodes package."""
         config = self.write_config_and_load(TestCaseBase.CONFIG_NO_NODES)
 
         self.assertEqual(

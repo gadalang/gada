@@ -2,9 +2,6 @@
 
 Those nodes may be written in any language, but the component must be
 a python package installed in site-packages.
-
-All components must be python packages prefixed by ``gadalang_`` to clearly
-identify them.
 """
 from __future__ import annotations
 
@@ -21,7 +18,7 @@ def load(name: str):
         >> import gada
         >>
         >> gada.component.load("testnodes")
-        <module 'gadalang_testnodes' from '...\\gada\\test\\gadalang_testnodes\\__init__.py'>
+        <module 'testnodes' from '...\\gada\\test\\testnodes\\__init__.py'>
         >>
 
     This will raise an exception if no component is found.
@@ -32,7 +29,7 @@ def load(name: str):
     try:
         import importlib
 
-        return importlib.import_module(f"gadalang_{name}")
+        return importlib.import_module(name)
     except Exception as e:
         raise Exception(f"component {name} not found, verify it is installed") from e
 
@@ -46,7 +43,7 @@ def get_dir(comp) -> str:
         >>
         >> comp = gada.component.load("testnodes")
         >> gada.component.get_dir(comp)
-        '...\\gada\\test\\gadalang_testnodes'
+        '...\\gada\\test\\testnodes'
         >>
 
     This is the same as:
@@ -57,7 +54,7 @@ def get_dir(comp) -> str:
         >>
         >> comp = gada.component.load("testnodes")
         >> os.path.abspath(os.path.dirname(comp.__file__))
-        '...\\gada\\test\\gadalang_testnodes'
+        '...\\gada\\test\\testnodes'
         >>
 
     :param comp: loaded component

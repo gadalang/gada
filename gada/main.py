@@ -37,7 +37,7 @@ def run(
 
         >>> import gada
         >>>
-        >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
+        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
         >>> gada.test_utils.write_testnodes_config({
         ...     'nodes': {
         ...         'echo': {
@@ -119,7 +119,7 @@ def main(
 
         >>> import gada
         >>>
-        >>> # Overwrite "gada/test/gadalang_testnodes/config.yml" for this test
+        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
         >>> gada.test_utils.write_testnodes_config({
         ...     'nodes': {
         ...         'echo': {

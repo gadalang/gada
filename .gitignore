@@ -1,6 +1,6 @@
 # Custom
 *.bat
-test/gadalang_testnodes/config.yml
+test/testnodes/config.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

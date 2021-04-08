@@ -10,11 +10,8 @@ from gada import component, test_utils
 
 class TestCaseBase(unittest.TestCase):
     PACKAGE_NAME = "testnodes"
-    FULL_PACKAGE_NAME = f"gadalang_{PACKAGE_NAME}"
     GADA_CONFIG = {"bins": {}}
-    CONFIG_YML = os.path.join(
-        os.path.dirname(__file__), FULL_PACKAGE_NAME, "config.yml"
-    )
+    CONFIG_YML = os.path.join(os.path.dirname(__file__), PACKAGE_NAME, "config.yml")
     CONFIG_NO_NODES = {"runner": "generic"}
     CONFIG_NO_RUNNER = {
         "nodes": {
@@ -48,7 +45,7 @@ class TestCaseBase(unittest.TestCase):
         # Load component
         comp = component.load(TestCaseBase.PACKAGE_NAME)
         self.assertEqual(
-            comp.__name__, TestCaseBase.FULL_PACKAGE_NAME, "invalid package returned"
+            comp.__name__, TestCaseBase.PACKAGE_NAME, "invalid package returned"
         )
 
         # Load component configuration
