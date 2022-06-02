@@ -6,7 +6,7 @@ import sys
 import io
 import argparse
 from typing import Optional
-from gada import component, runners, datadir
+from gada import component, runners, datadir, program
 
 
 def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
@@ -24,14 +24,14 @@ def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
 
 
 def run(
-    node: str,
+    target: str,
     argv: Optional[list[str]] = None,
     *,
     stdin=None,
     stdout=None,
     stderr=None,
 ):
-    """Run a gada node:
+    """Run a target:
 
     .. code-block:: python
 
@@ -71,7 +71,7 @@ def run(
     for writing unit tests when you can't use ``sys.stdin`` or ``sys.stdout``, or simply
     when you want to be able to read from the output.
 
-    :param node: node to run
+    :param target: target to run
     :param argv: additional CLI arguments
     :param stdin: input stream
     :param stdout: output stream
@@ -81,29 +81,10 @@ def run(
     gada_config = datadir.load_config()
 
     # Check command format
-    node_argv = node.split(".")
-    if len(node_argv) != 2:
-        raise Exception(f"invalid command {node}")
+    prog = program.load(target)
 
-    # Load component module
-    comp = component.load(node_argv[0])
-
-    # Load node configuration
-    node_config = component.get_node_config(component.load_config(comp), node_argv[1])
-
-    # Load correct runner
-    runner = runners.load(node_config.get("runner", None))
-
-    # Run component
-    runner.run(
-        comp=comp,
-        gada_config=gada_config,
-        node_config=node_config,
-        argv=argv,
-        stdin=stdin,
-        stdout=stdout,
-        stderr=stderr,
-    )
+    while not prog.is_done:
+        prog.step()
 
 
 def main(
@@ -159,8 +140,8 @@ def main(
     """
     argv = sys.argv if argv is None else argv
 
-    parser = argparse.ArgumentParser(prog="Service", description="Help")
-    parser.add_argument("node", type=str, help="command name")
+    parser = argparse.ArgumentParser(prog="gada", description="Help")
+    parser.add_argument("target", type=str, help="target to run")
     parser.add_argument(
         "argv", type=str, nargs=argparse.REMAINDER, help="additional CLI arguments"
     )
@@ -168,7 +149,7 @@ def main(
     args = parser.parse_args(args=argv[1:])
     node_argv, gada_argv = split_unknown_args(args.argv)
 
-    run(node=args.node, argv=node_argv, stdin=stdin, stdout=stdout, stderr=stderr)
+    run(target=args.target, argv=node_argv, stdin=stdin, stdout=stdout, stderr=stderr)
 
 
 if __name__ == "__main__":

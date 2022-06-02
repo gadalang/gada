@@ -10,30 +10,6 @@ import os
 from typing import Optional
 
 
-def load(name: str):
-    r"""Load a component installed in site-packages:
-
-    .. code-block:: python
-
-        >> import gada
-        >>
-        >> gada.component.load("testnodes")
-        <module 'testnodes' from '...\\gada\\test\\testnodes\\__init__.py'>
-        >>
-
-    This will raise an exception if no component is found.
-
-    :param name: component name
-    :return: component
-    """
-    try:
-        import importlib
-
-        return importlib.import_module(name)
-    except Exception as e:
-        raise Exception(f"component {name} not found, verify it is installed") from e
-
-
 def get_dir(comp) -> str:
     r"""Get the parent directory of a component:
 

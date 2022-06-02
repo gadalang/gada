@@ -1,0 +1,25 @@
+nodes:
+- name: set
+  runner: _gada
+  inputs:
+  - name: in
+  outputs:
+  - name: out
+- name: print
+  runner: _gada
+  inputs:
+  - name: in
+- name: max
+  runner: _gada
+  inputs:
+  - name: a
+  - name: b
+  outputs:
+  - name: out
+- name: min
+  runner: _gada
+  inputs:
+  - name: a
+  - name: b
+  outputs:
+  - name: out

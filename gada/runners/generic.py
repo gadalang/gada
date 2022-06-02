@@ -68,7 +68,7 @@ def run(
     argv: Optional[list[str]] = None,
     stdin=None,
     stdout=None,
-    stderr=None
+    stderr=None,
 ):
     """Run a generic command:
 
