@@ -1,7 +1,8 @@
-__all__ = ["Context", "Program", "load"]
+"Package containing everything for running Gada programs."
+__all__ = ["Context", "Program", "from_node", "load"]
 import yaml
 import re
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, Union
 from gada._model import Node, NodeCall, NodePath, NodeInstance, NodeNotFoundError
 from gada import runners
 from gada._log import logger
@@ -183,23 +184,18 @@ class Context(object):
 
 
 class Program(object):
-    __slot__ = ("_config", "_context", "_cache")
+    __slot__ = ("_config", "_outputs", "_cache")
 
     def __init__(
-        self, config: dict = None, /, *, name: str = None, steps: list[Node] = None
+        self, config: dict = None, /, *, name: str = None, steps: list[NodeCall] = None, inputs: Optional[list] = None, outputs: Optional[str] = None
     ) -> None:
         self._config = {
             "name": name if name is not None else "",
+            "inputs": inputs if inputs is not None else [],
             "steps": steps if steps is not None else [],
         } | (config if config is not None else {})
-        self._context: Context = Context([NodeCall(_) for _ in self._config["steps"]])
+        self._outputs = outputs
         self._cache: dict = {}
-
-        if name is not None:
-            self._config["name"] = name
-
-        if steps is not None:
-            self._config["steps"] = list(steps)
 
     @property
     def is_running(self) -> bool:
@@ -214,13 +210,77 @@ class Program(object):
         return self._context.line
 
     def __repr__(self) -> str:
-        return f"Program({self._config})"
+        return f"{self.__class__.__name__}({self._config})"
 
-    def step(self) -> bool:
-        self._context = self._context.step(cache=self._cache)
-        return self._context.is_done
+    def step(self, inputs: Optional[dict] = None) -> Context:
+        return Context(self._config["steps"], vars=inputs)
+
+    def run(self, inputs: Optional[dict] = None) -> None:
+        ctx = Context(self._config["steps"], vars=inputs)
+        while not ctx.is_done:
+            ctx = ctx.step(cache=self._cache)
+
+        if self._outputs:
+            return ctx.node(self._outputs).vars()
 
 
-def load(path: str, /) -> Program:
-    with open(path, "r") as f:
-        return Program(yaml.safe_load(f.read()))
+def from_node(node: Union[str, NodePath, Node], /) -> Program:
+    r"""Wrap a single node as a runnable program.
+
+    .. code-block:: python
+
+        >>> from gada import program
+        >>>
+        >>> p = program.from_node("max")
+        >>> p.run({"a": 1, "b": 2})
+        {'out': 2}
+        >>>
+    
+    :param node: reference to a node
+    :return: the node as a program
+    """
+    if isinstance(node, str):
+        node = NodePath(node)
+
+    if isinstance(node, NodePath):
+        node = node.load()
+
+    if not isinstance(node, Node):
+        raise Exception("argument must be a str, NodePath, or Node")
+
+    return Program(
+        name=node.name,
+        inputs=node.inputs,
+        outputs="node",
+        steps=[NodeCall(
+            name=node.name,
+            id="node",
+            inputs={k["name"]: f'{{{{ {k["name"]} }}}}' for k in node.inputs}
+        )]
+    )
+
+
+def load(file: str, /) -> Program:
+    r"""Load a program from file.
+
+    .. code-block:: python
+
+        >>> from gada import program
+        >>>
+        >>> p = program.load("max.yml")
+        >>> p.run({"a": 1, "b": 2})
+        {'out': 2}
+        >>>
+    
+    :param file: filename or filelike object
+    :return: loaded program
+    """
+    if isinstance(file, str):
+        with open(file, "r") as f:
+            content = f.read()
+    elif hasattr(file, "read"):
+        content = file.read()
+    else:
+        raise Exception("argument must be a str or filelike object")
+
+    return Program(yaml.safe_load(content))

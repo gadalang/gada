@@ -1,89 +1,156 @@
-"""Package containing the builin types usable in gada"""
+"""Package containing the builtin Gada types usable in nodes and programs."""
 __all__ = [
     "Type",
+    "BoolType",
     "IntType",
     "FloatType",
     "StringType",
-    "BoolType",
     "ListType",
     "TupleType",
     "UnionType",
+    "isinstance",
     "typeof",
 ]
+import builtins
 from dataclasses import dataclass
 from typing import Any
 from abc import ABC, abstractmethod
 
 
+_isinstance = builtins.isinstance
+
+
 class Type(ABC):
+    """Base for Gada types"""
     @abstractmethod
     def match(self, o: Any, /) -> bool:
         raise NotImplementedError()
 
 
 @dataclass
-class IntType(Type):
-    def __repr__(self) -> str:
-        return "IntType()"
-
-    def __str__(self) -> str:
-        return "int"
-
-    def match(self, o: Any, /) -> bool:
-        return isinstance(o, int)
-
-
-@dataclass
-class FloatType(Type):
-    def __repr__(self) -> str:
-        return "FloatType()"
-
-    def __str__(self) -> str:
-        return "float"
-
-    def match(self, o: Any, /) -> bool:
-        return isinstance(o, float)
-
-
-@dataclass
-class StringType(Type):
-    def __repr__(self) -> str:
-        return "StringType()"
-
-    def __str__(self) -> str:
-        return "str"
-
-    def match(self, o: Any, /) -> bool:
-        return isinstance(o, str)
-
-
-@dataclass
 class BoolType(Type):
+    r"""Wrap the Python **bool** type.
+    
+    .. code-block:: python
+
+        >>> t = BoolType()
+        >>> repr(t)
+        'BoolType()'
+        >>> str(t)
+        'bool'
+        >>>
+        
+    """
     def __repr__(self) -> str:
-        return "BoolType()"
+        return f"{self.__class__.__name__}()"
 
     def __str__(self) -> str:
         return "bool"
 
     def match(self, o: Any, /) -> bool:
-        return isinstance(o, bool)
+        return _isinstance(o, bool)
+
+
+@dataclass
+class IntType(Type):
+    r"""Wrap the Python **int** type.
+    
+    .. code-block:: python
+
+        >>> t = IntType()
+        >>> repr(t)
+        'IntType()'
+        >>> str(t)
+        'int'
+        >>>
+        
+    """
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "int"
+
+    def match(self, o: Any, /) -> bool:
+        return _isinstance(o, int)
+
+
+@dataclass
+class FloatType(Type):
+    r"""Wrap the Python **float** type.
+    
+    .. code-block:: python
+
+        >>> t = FloatType()
+        >>> repr(t)
+        'FloatType()'
+        >>> str(t)
+        'float'
+        >>>
+        
+    """
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "float"
+
+    def match(self, o: Any, /) -> bool:
+        return _isinstance(o, float)
+
+
+@dataclass
+class StringType(Type):
+    r"""Wrap the Python **str** type.
+    
+    .. code-block:: python
+
+        >>> t = StringType()
+        >>> repr(t)
+        'StringType()'
+        >>> str(t)
+        'str'
+        >>>
+        
+    """
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "str"
+
+    def match(self, o: Any, /) -> bool:
+        return _isinstance(o, str)
 
 
 @dataclass
 class ListType(Type):
+    r"""Wrap the Python **list** type.
+    
+    .. code-block:: python
+
+        >>> t = ListType(IntType())
+        >>> repr(t)
+        'ListType(IntType())'
+        >>> str(t)
+        '[int]'
+        >>>
+    
+    :param item_type: type of list items
+    """
     __slot__ = "_item_type"
 
     def __init__(self, item_type: Type, /) -> None:
         self._item_type = item_type
 
     def __repr__(self) -> str:
-        return f"ListType({repr(self._item_type)})"
+        return f"{self.__class__.__name__}({repr(self._item_type)})"
 
     def __str__(self) -> str:
         return f"[{self._item_type}]"
 
     def match(self, o: Any, /) -> bool:
-        if not isinstance(o, list):
+        if not _isinstance(o, list):
             return False
 
         if not self._item_type or not o:
@@ -94,19 +161,32 @@ class ListType(Type):
 
 @dataclass
 class TupleType(Type):
+    r"""Wrap the Python **tuple** type.
+    
+    .. code-block:: python
+
+        >>> t = TupleType([IntType(), StringType()])
+        >>> repr(t)
+        'TupleType([IntType(), StringType()])'
+        >>> str(t)
+        '(int, str)'
+        >>>
+    
+    :param items_types: types of tuple items
+    """
     __slot__ = "_items_types"
 
     def __init__(self, items_types: list[Type], /) -> None:
         self._items_types = list(items_types) if items_types is not None else []
 
     def __repr__(self) -> str:
-        return f"TupleType({repr(self._items_types)})"
+        return f"{self.__class__.__name__}({repr(self._items_types)})"
 
     def __str__(self) -> str:
         return f"({', '.join(map(str, self._items_types))})"
 
     def match(self, o: Any, /) -> bool:
-        if not isinstance(o, tuple):
+        if not _isinstance(o, tuple):
             return False
 
         if len(self._items_types) != len(o):
@@ -117,19 +197,32 @@ class TupleType(Type):
 
 @dataclass
 class UnionType(Type):
+    r"""Represent an union of multiple types.
+
+    .. code-block:: python
+
+        >>> t = UnionType([IntType(), StringType()])
+        >>> repr(t)
+        'UnionType([IntType(), StringType()])'
+        >>> str(t)
+        'int | str'
+        >>>
+    
+    :param items_types: possible types
+    """
     __slot__ = "_items_types"
 
     def __init__(self, items_types: list[Type], /) -> None:
         self._items_types = list(items_types) if items_types is not None else []
 
     def __repr__(self) -> str:
-        return f"UnionType({repr(self._items_types)})"
+        return f"{self.__class__.__name__}({repr(self._items_types)})"
 
     def __str__(self) -> str:
         return " | ".join(map(str, self._items_types))
 
     def match(self, o: Any, /) -> bool:
-        if not isinstance(o, tuple):
+        if not _isinstance(o, tuple):
             return False
 
         if len(self._items_types) != len(o):
@@ -138,12 +231,33 @@ class UnionType(Type):
         return all((t.match(v) for t, v in zip(self._items_types, o)))
 
 
-def typeof(o: Any, /) -> Type:
-    r"""Get the type of a Python object.
+def isinstance(value: Any, type: Type, /) -> bool:
+    r"""Check if a Python object is an instance of a Gada type.
+    
+    .. code-block:: python
+
+        >>> from gada import typing
+        >>> 
+        >>> typing.isinstance(1, IntType())
+        True
+        >>> typing.isinstance("hello", IntType())
+        False
+        >>>
+
+    :param value: Python object
+    :param type: type to check
+    :return: if **value** is an instance of **type**
+    """
+    return type.match(value)
+
+
+def typeof(value: Any, /) -> Type:
+    r"""Get the Gada type of a Python object.
 
     .. code-block:: python
 
         >>> from gada import typing
+        >>> 
         >>> typing.typeof(True)
         BoolType()
         >>> typing.typeof(1)
@@ -156,20 +270,20 @@ def typeof(o: Any, /) -> Type:
         TupleType([IntType(), StringType()])
         >>>
 
-    :param o: Python object
-    :return: it's type
+    :param value: Python object
+    :return: type of **value**
     """
-    if isinstance(o, bool):
+    if _isinstance(value, bool):
         return BoolType()
-    if isinstance(o, int):
+    if _isinstance(value, int):
         return IntType()
-    if isinstance(o, float):
+    if _isinstance(value, float):
         return FloatType()
-    if isinstance(o, str):
+    if _isinstance(value, str):
         return StringType()
-    if isinstance(o, list):
-        return ListType(typeof(o[0]) if o else None)
-    if isinstance(o, tuple):
-        return TupleType(map(typeof, o))
+    if _isinstance(value, list):
+        return ListType(typeof(value[0]) if value else None)
+    if _isinstance(value, tuple):
+        return TupleType(map(typeof, value))
 
-    raise Exception(f"unsupported type {type(o)}")
+    raise Exception(f"unsupported type {type(value)}")

@@ -1,8 +1,8 @@
 .. -*- coding: utf-8 -*-
 .. _datadir:
 
-datadir Module
-==============
+:mod:`gada.datadir` Module
+==========================
 
 .. automodule:: gada.datadir
     :noindex:

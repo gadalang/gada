@@ -1,6 +1,4 @@
-"""Manage data directory.
-"""
-# -*- coding: utf-8 -*-
+"""Gada has a special directory for storing global configuration."""
 from __future__ import annotations
 
 __all__ = ["path", "load_config", "write_config"]
@@ -11,15 +9,17 @@ import yaml
 
 
 def path() -> pathlib.Path:
-    """Get path to local data directory.
+    """Get abolute path to the data directory.
 
-    * Windows: "AppData/Roaming/Gada"
-    * Linux: ".local/share/gada"
-    * Mac: "Library/Application Support/Gada"
+    * Windows: ``AppData/Roaming/Gada``
+    * Linux: ``.local/share/gada``
+    * Mac: ``Library/Application Support/Gada``
 
-    :return: path to local data directory
+    Will raise **NotImplementedError** on unsupported platforms.
+
+    :return: path to data directory
     """
-    home = pathlib.Path.home()
+    home = pathlib.Path.home().absolute()
 
     if sys.platform == "win32":
         return home / "AppData" / "Roaming" / "Gada"
@@ -28,9 +28,11 @@ def path() -> pathlib.Path:
     elif sys.platform == "darwin":
         return home / "Library" / "Application Support" / "Gada"
 
+    raise NotImplementedError()
+
 
 def load_config() -> dict:
-    """Load ``{datadir}/config.yml`` configuration file.
+    """Load ``{datadir}/config.yml``.
 
     An empty configuration will be returned if an error occurs.
 
@@ -46,9 +48,9 @@ def load_config() -> dict:
 
 
 def write_config(config: dict = None):
-    """Write ``{datadir}/config.yml`` configuration file.
+    """Override ``{datadir}/config.yml``.
 
-    :return: configuration
+    :param config: new configuration
     """
     data_dir = path()
     os.makedirs(data_dir, exist_ok=True)

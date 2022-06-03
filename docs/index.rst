@@ -48,7 +48,9 @@ Contents:
 
    api
    datadir
-   component
+   typing
+   parser
+   program
    testutils
    runner
    writing

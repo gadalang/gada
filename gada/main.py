@@ -25,66 +25,32 @@ def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
 
 def run(
     target: str,
-    argv: Optional[list[str]] = None,
-    *,
-    stdin=None,
-    stdout=None,
-    stderr=None,
-):
-    """Run a target:
+    inputs: Optional[dict] = None
+) -> dict:
+    """Run a Gada node or program.
 
     .. code-block:: python
 
         >>> import gada
         >>>
-        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
-        >>> gada.test_utils.write_testnodes_config({
-        ...     'nodes': {
-        ...         'echo': {
-        ...             'runner': 'generic',
-        ...             'bin': 'echo'
-        ...         }
-        ...     }
-        ... })
-        >>>
-        >>> # Need to create fake stdin and stdout for unittests
-        >>> with gada.test_utils.PipeStream() as stdin:
-        ...     with gada.test_utils.PipeStream() as stdout:
-        ...         # Run node with CLI arguments
-        ...         gada.run(
-        ...             'testnodes.echo',
-        ...             ['hello'],
-        ...             stdin=stdin.reader,
-        ...             stdout=stdout.writer,
-        ...             stderr=stdout.writer
-        ...         )
-        ...
-        ...         # Close writer end so we can read form it
-        ...         stdout.writer.close()
-        ...
-        ...         # Read node output
-        ...         stdout.reader.read().decode().strip()
-        'hello'
+        >>> gada.run("max", {"a": 1, "b": 2})
+        {'out': 2}
         >>>
 
-    The three parameters ``stdin``, ``stdout`` or ``stderr`` are provided as a convenience
-    for writing unit tests when you can't use ``sys.stdin`` or ``sys.stdout``, or simply
-    when you want to be able to read from the output.
-
-    :param target: target to run
-    :param argv: additional CLI arguments
-    :param stdin: input stream
-    :param stdout: output stream
-    :param stderr: error stream
+    :param target: name of a node or path to a program
+    :param inputs: inputs passed to the node or program
+    :return: node or program outputs
     """
     # Load gada configuration
     gada_config = datadir.load_config()
 
     # Check command format
-    prog = program.load(target)
+    if not target.endswith(".yml"):
+        prog = program.from_node(target)
+    else:
+        prog = program.load(target)
 
-    while not prog.is_done:
-        prog.step()
+    return prog.run(inputs=inputs)
 
 
 def main(

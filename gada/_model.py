@@ -210,6 +210,10 @@ class Node(object):
     def runner(self) -> str:
         return self._config.get("runner", "")
 
+    @property
+    def inputs(self) -> list[dict]:
+        return self._config.get("inputs", [])
+
     def __repr__(self) -> str:
         return f"Node({self._config})"
 
@@ -387,6 +391,9 @@ class NodeInstance(object):
 
     @property
     def outputs(self) -> dict:
+        return self._outputs
+
+    def vars(self) -> dict:
         return self._outputs
 
     def var(self, name: str, /) -> Any:
