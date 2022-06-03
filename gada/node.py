@@ -190,6 +190,7 @@ class Param(object):
     """
 
     name: str
+    value: Any
     type: typing.Type
     help: str
 
@@ -197,16 +198,26 @@ class Param(object):
         self,
         name: str,
         *,
+        value: Optional[Any] = None,
         type: Optional[typing.Type] = None,
         help: Optional[str] = None,
     ) -> None:
         object.__setattr__(self, "name", name)
+        object.__setattr__(self, "value", value)
         object.__setattr__(self, "type", type)
         object.__setattr__(self, "help", help)
 
     @staticmethod
     def from_config(config: dict, /) -> Param:
         r"""Load a **Param** from a JSON configuration.
+
+        .. code-block:: python
+
+            >>> from gada.node import Param
+            >>>
+            >>> Param.from_config({"name": "a", "type": "int"})
+            Param(name='a', ...)
+            >>>
 
         :param config: configuration
         :return: loaded **Param**
@@ -219,7 +230,12 @@ class Param(object):
         if type:
             type = parser.type(type)
 
-        return Param(name=name, type=type, help=config.get("help", None))
+        return Param(
+            name=name,
+            value=config.get("value", None),
+            type=type,
+            help=config.get("help", None),
+        )
 
 
 @dataclass(frozen=True)
@@ -265,6 +281,24 @@ class Node(object):
     @staticmethod
     def from_config(config: dict, /) -> Node:
         r"""Load a **Node** from a JSON configuration.
+
+        .. code-block:: python
+
+            >>> from gada.node import Node
+            >>>
+            >>> Node.from_config({
+            ...   "name": "min",
+            ...   "inputs": [
+            ...     {"name": "a", "type": "int"},
+            ...     {"name": "b", "type": "int"}
+            ...   ],
+            ...   "outputs": [
+            ...     {"name": "out", "type": "int"}
+            ...   ]
+            ... })
+            ...
+            Node(name='min', ...)
+            >>>
 
         :param config: configuration
         :return: loaded **Node**
@@ -419,6 +453,21 @@ class NodeCall(object):
     def from_config(config: dict, /) -> NodeCall:
         r"""Load a **Node** call from a JSON configuration.
 
+        .. code-block:: python
+
+            >>> from gada.node import NodeCall
+            >>>
+            >>> NodeCall.from_config({
+            ...   "name": "min",
+            ...   "inputs": {
+            ...     "a": 1,
+            ...     "b": 2
+            ...   }
+            ... })
+            ...
+            NodeCall(name='min', ...)
+            >>>
+
         :param config: configuration
         :return: loaded **NodeCall**
         """
@@ -428,8 +477,8 @@ class NodeCall(object):
 
         return NodeCall(
             name=name,
-            steps=[NodeCall.from_config(_) for _ in config.get("steps", [])],
+            id=config.get("id", None),
             file=config.get("file", None),
             lineno=config.get("lineno", None),
-            inputs=[Param.from_config(_) for _ in config.get("inputs", [])],
+            inputs={k: v for k, v in config.get("inputs", {}).items()},
         )

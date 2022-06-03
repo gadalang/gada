@@ -7,6 +7,7 @@ import io
 import argparse
 from typing import Optional
 from gada.program import Program
+from gada import datadir
 
 
 def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
