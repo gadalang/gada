@@ -9,7 +9,6 @@ import sys
 import asyncio
 import importlib
 from typing import Optional
-from gada import component
 
 
 def get_bin_path(bin: str, *, gada_config: dict) -> str:
@@ -71,54 +70,6 @@ def run(
     stderr=None,
 ):
     """Run a generic command:
-
-    .. code-block:: python
-
-        >>> import gada
-        >>>
-        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
-        >>> gada.test_utils.write_testnodes_config({
-        ...     'nodes': {
-        ...         'echo': {
-        ...             'runner': 'generic',
-        ...             'bin': 'echo'
-        ...         }
-        ...     }
-        ... })
-        >>>
-        >>> # Load "testnodes" component
-        >>> comp = gada.component.load('testnodes')
-        >>>
-        >>> # Load component and node configuration
-        >>> gada_config = gada.datadir.load_config()
-        >>> comp_config = gada.component.load_config(comp)
-        >>> print(comp_config)
-        {'nodes': {'echo': {'bin': 'echo', 'runner': 'generic'}}}
-        >>> node_config = gada.component.get_node_config(comp_config, 'echo')
-        >>> print(node_config)
-        {'runner': 'generic', 'cwd': None, 'env': {}, 'bin': 'echo'}
-        >>>
-        >>> # Need to create fake stdin and stdout for unittests
-        >>> with gada.test_utils.PipeStream() as stdin:
-        ...     with gada.test_utils.PipeStream() as stdout:
-        ...         # Run node with CLI arguments
-        ...         gada.runners.generic.run(
-        ...             comp,
-        ...             argv=['hello'],
-        ...             gada_config=gada_config,
-        ...             node_config=node_config,
-        ...             stdin=stdin.reader,
-        ...             stdout=stdout.writer,
-        ...             stderr=stdout.writer
-        ...         )
-        ...
-        ...         # Close writer end so we can read form it
-        ...         stdout.writer.close()
-        ...
-        ...         # Read node output
-        ...         stdout.reader.read().decode().strip()
-        'hello'
-        >>>
 
     :param comp: loaded component
     :param gada_config: gada configuration

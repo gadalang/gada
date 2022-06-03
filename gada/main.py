@@ -6,7 +6,7 @@ import sys
 import io
 import argparse
 from typing import Optional
-from gada import component, runners, datadir, program
+from gada.program import Program
 
 
 def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
@@ -23,10 +23,7 @@ def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
     return argv, []
 
 
-def run(
-    target: str,
-    inputs: Optional[dict] = None
-) -> dict:
+def run(target: str, inputs: Optional[dict] = None) -> dict:
     """Run a Gada node or program.
 
     .. code-block:: python
@@ -46,9 +43,9 @@ def run(
 
     # Check command format
     if not target.endswith(".yml"):
-        prog = program.from_node(target)
+        prog = Program.from_node(target)
     else:
-        prog = program.load(target)
+        prog = Program.load(target)
 
     return prog.run(inputs=inputs)
 

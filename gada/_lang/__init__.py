@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ["_set", "_print", "_max", "_min"]
 
 

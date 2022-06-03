@@ -1,11 +1,12 @@
+"""Package containing everything for manipulating nodes."""
 from __future__ import annotations
 
 __all__ = [
     "NodeNotFoundError",
+    "Param",
     "Node",
     "NodeCall",
     "NodePath",
-    "NodeInstance",
     "nodes",
     "dump_module_config",
     "load_module_config",
@@ -16,6 +17,8 @@ from types import ModuleType
 from typing import Optional, Any, Tuple, Union
 from pathlib import Path
 import yaml
+from gada import typing
+from gada import parser
 
 
 _GADA_YML_FILENAME = "gada.yml"
@@ -177,91 +180,156 @@ def nodes(
     return load_module_config(module, cache=cache).get("nodes", [])
 
 
-@dataclass
-class Node(object):
-    __slots__ = "_config"
+@dataclass(frozen=True)
+class Param(object):
+    """Represent an input or output of a node.
+
+    :param name: name of parameter
+    :param type: it's type
+    :param help: description of the parameter
+    """
+
+    name: str
+    type: typing.Type
+    help: str
 
     def __init__(
         self,
-        config: Optional[dict] = None,
-        /,
+        name: str,
         *,
-        name: Optional[str] = None,
-        is_pure: Optional[bool] = None,
-        runner: Optional[str] = None,
-        inputs: Optional[list[dict]] = None,
-        outputs: Optional[list[dict]] = None,
+        type: Optional[typing.Type] = None,
+        help: Optional[str] = None,
     ) -> None:
-        self._config = {
-            "name": name if name is not None else "",
-            "pure": is_pure if is_pure is not None else False,
-            "runner": runner if runner is not None else "",
-            "inputs": inputs if inputs is not None else [],
-            "outputs": outputs if outputs is not None else [],
-        } | (config if config is not None else {})
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "type", type)
+        object.__setattr__(self, "help", help)
 
-    @property
-    def name(self) -> str:
-        return self._config.get("name", "")
+    @staticmethod
+    def from_config(config: dict, /) -> Param:
+        r"""Load a **Param** from a JSON configuration.
 
-    @property
-    def is_pure(self) -> bool:
-        return self._config.get("pure", False)
+        :param config: configuration
+        :return: loaded **Param**
+        """
+        name = config.get("name", None)
+        if not name:
+            raise Exception("missing name attribute for node parameter")
 
-    @property
-    def runner(self) -> str:
-        return self._config.get("runner", "")
+        type = config.get("type", None)
+        if type:
+            type = parser.type(type)
 
-    @property
-    def inputs(self) -> list[dict]:
-        return self._config.get("inputs", [])
-
-    def __repr__(self) -> str:
-        return f"Node({self._config})"
+        return Param(name=name, type=type, help=config.get("help", None))
 
 
-@dataclass
+@dataclass(frozen=True)
+class Node(object):
+    """Represent a node definition.
+
+    :param name: name of the node
+    :param file: absolute path to the source code
+    :param lineno: line number in the source code
+    :param runner: name of runner
+    :param is_pure: if the node is pure
+    :param inputs: inputs of the node
+    :param outputs: outputs of the node
+    """
+
+    name: str
+    file: Path
+    lineno: int
+    runner: str
+    is_pure: bool
+    inputs: list[Param]
+    outputs: list[Param]
+
+    def __init__(
+        self,
+        name: str,
+        *,
+        file: Optional[Path] = None,
+        lineno: Optional[int] = None,
+        runner: Optional[str] = None,
+        is_pure: Optional[bool] = None,
+        inputs: Optional[list[Param]] = None,
+        outputs: Optional[list[Param]] = None,
+    ) -> None:
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "file", file)
+        object.__setattr__(self, "lineno", lineno if lineno is not None else 0)
+        object.__setattr__(self, "runner", runner)
+        object.__setattr__(self, "is_pure", is_pure)
+        object.__setattr__(self, "inputs", inputs if inputs is not None else [])
+        object.__setattr__(self, "outputs", outputs if outputs is not None else [])
+
+    @staticmethod
+    def from_config(config: dict, /) -> Node:
+        r"""Load a **Node** from a JSON configuration.
+
+        :param config: configuration
+        :return: loaded **Node**
+        """
+        name = config.get("name", None)
+        if not name:
+            raise Exception("missing name attribute for node")
+
+        return Node(
+            name=name,
+            file=config.get("file", None),
+            lineno=config.get("lineno", None),
+            runner=config.get("runner", None),
+            is_pure=config.get("pure", False),
+            inputs=[Param.from_config(_) for _ in config.get("inputs", [])],
+            outputs=[Param.from_config(_) for _ in config.get("outputs", [])],
+        )
+
+
+@dataclass(frozen=True)
 class NodePath(object):
+    r"""Path to a node installed in the **PYTHONPATH**.
+
+    .. code-block:: python
+
+        >>> n = NodePath('module/node')
+        >>> repr(n)
+        "NodePath('module/node')"
+        >>> str(n)
+        'module/node'
+        >>>
+
+    :param path: node path
+    """
     __slots__ = ("_path", "_module", "_name")
 
     def __init__(self, path: str, /) -> None:
-        r"""Get a path to a node.
-
-        .. code-block:: python
-
-            >>> import gada
-            >>> gada.NodePath('module/node')
-            NodePath('module/node')
-            >>>
-
-        :param path: node path
-        """
         path = path if path is not None else ""
         parts = path.split("/")
-        self._path = path
-        self._module = parts[:-1] if len(parts) > 1 else _GADA_LANG_MODULE
-        self._name = parts[-1] if len(parts) > 0 else None
+        object.__setattr__(self, "_path", path)
+        object.__setattr__(
+            self, "_module", parts[:-1] if len(parts) > 1 else _GADA_LANG_MODULE
+        )
+        object.__setattr__(self, "_name", parts[-1] if len(parts) > 0 else None)
 
     def __repr__(self) -> str:
-        return f"NodePath('{self._path}')"
+        return f"{self.__class__.__name__}('{self._path}')"
 
     def __str__(self) -> str:
         return self._path
 
     @property
     def module(self) -> list[str]:
-        """Get module path"""
+        """Name of the parent module"""
         return self._module
 
     @property
     def name(self) -> str:
-        """Get node name"""
+        """Name of the node"""
         return self._name
 
     def absolute(self, *, cache: Optional[dict] = None) -> Path:
-        """Get the absolute path to module containing this node.
+        """Get the absolute path to parent module.
 
-        This will raise ``ModuleNotFoundError`` if the node is not installed.
+        This will raise **ModuleNotFoundError** if module is not in the **PYTHONPATH**.
 
         :param cache: cache for storing results
         """
@@ -273,17 +341,11 @@ class NodePath(object):
 
         .. code-block:: python
 
-            >>> import gada
-            >>> gada.dump_module_config(
-            ...     'test.testnodes',
-            ...     {'nodes': [{'name': 'max'}]}
-            ... )
-            >>>
-            >>> gada.NodePath('test/testnodes/max').load()
-            Node({...})
+            >>> NodePath('max').load()
+            Node(name='max', ...)
             >>>
 
-        This will raise ``NodeNotFoundError`` if the node is not installed.
+        This will raise **ModuleNotFoundError** if module is not in the **PYTHONPATH**.
 
         :param cache: cache for storing results
         :return: the node if it exists
@@ -292,7 +354,7 @@ class NodePath(object):
             conf = load_module_config(self._module, cache=cache)
             for _ in conf.get("nodes", []):
                 if _.get("name", None) == self._name:
-                    return Node(_)
+                    return Node.from_config(_)
         except Exception:
             pass
 
@@ -304,14 +366,10 @@ class NodePath(object):
         .. code-block:: python
 
             >>> import gada
-            >>> gada.dump_module_config(
-            ...     'test.testnodes',
-            ...     {'nodes': [{'name': 'max'}]}
-            ... )
             >>>
-            >>> gada.NodePath('test/testnodes/max').exists()
+            >>> gada.NodePath('max').exists()
             True
-            >>> gada.NodePath('test/testnodes/min').exists()
+            >>> gada.NodePath('unknown').exists()
             False
             >>>
 
@@ -325,81 +383,53 @@ class NodePath(object):
             return False
 
 
-@dataclass
+@dataclass(frozen=True)
 class NodeCall(object):
-    __slots__ = "_config"
+    """Represent the call to a node in a program.
+
+    :param name: name of the node
+    :param id: unique id of the call
+    :param file: absolute path to the source code
+    :param lineno: line number in the source code
+    :param inputs: inputs for the call
+    """
+
+    name: str
+    id: str
+    file: Path
+    lineno: int
+    inputs: list[Param]
 
     def __init__(
         self,
-        config: Optional[dict] = None,
-        /,
+        name: str,
         *,
-        name: Optional[str] = None,
         id: Optional[str] = None,
-        line: Optional[int] = None,
-        inputs: Optional[dict] = None,
-        outputs: Optional[dict] = None,
+        file: Optional[Path] = None,
+        lineno: Optional[int] = None,
+        inputs: Optional[list[Param]] = None,
     ) -> None:
-        self._config = {
-            "name": name if name is not None else "",
-            "id": id if id is not None else "",
-            "line": line if line is not None else 0,
-            "inputs": dict(inputs) if inputs is not None else {},
-            "outputs": dict(outputs) if outputs is not None else {},
-        } | (config if config is not None else {})
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "id", id)
+        object.__setattr__(self, "file", file)
+        object.__setattr__(self, "lineno", lineno if lineno is not None else 0)
+        object.__setattr__(self, "inputs", inputs if inputs is not None else [])
 
-    @property
-    def name(self) -> str:
-        return self._config.get("name", "")
+    @staticmethod
+    def from_config(config: dict, /) -> NodeCall:
+        r"""Load a **Node** call from a JSON configuration.
 
-    @property
-    def id(self) -> str:
-        return self._config.get("id", "")
+        :param config: configuration
+        :return: loaded **NodeCall**
+        """
+        name = config.get("name", None)
+        if not name:
+            raise Exception("missing name attribute for node call")
 
-    @property
-    def line(self) -> int:
-        return self._config.get("line", 0)
-
-    @property
-    def inputs(self) -> dict:
-        return self._config.get("inputs", {})
-
-    @property
-    def outputs(self) -> dict:
-        return self._config.get("outputs", {})
-
-    def __repr__(self) -> str:
-        return f"NodeCall({self._config})"
-
-
-@dataclass
-class NodeInstance(object):
-    __slot__ = ("_node", "_step", "_outputs")
-
-    def __init__(
-        self, node: Node, step: NodeCall, /, outputs: Optional[dict] = None
-    ) -> None:
-        self._node: Node = node
-        self._step: NodeCall = step
-        self._outputs: dict = outputs if outputs is not None else {}
-
-    @property
-    def node(self) -> Node:
-        return self._node
-
-    @property
-    def step(self) -> NodeCall:
-        return self._step
-
-    @property
-    def outputs(self) -> dict:
-        return self._outputs
-
-    def vars(self) -> dict:
-        return self._outputs
-
-    def var(self, name: str, /) -> Any:
-        return self._outputs.get(name, None)
-
-    def __repr__(self) -> str:
-        return f"NodeInstance({self._node}, {self._step}, {self._output})"
+        return NodeCall(
+            name=name,
+            steps=[NodeCall.from_config(_) for _ in config.get("steps", [])],
+            file=config.get("file", None),
+            lineno=config.get("lineno", None),
+            inputs=[Param.from_config(_) for _ in config.get("inputs", [])],
+        )

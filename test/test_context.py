@@ -70,14 +70,14 @@ def test_context():
     assert cxt.step() == cxt
     assert cxt.vars() == {"out": 1}
     assert cxt.node("a")
-    assert cxt.node("a").var("out") == 1
+    assert cxt.node("a").outputs == {"out": 1}
     assert not cxt.node("b")
     assert not cxt.is_done
 
     assert cxt.step() == cxt
     assert cxt.vars() == {"out": 2}
     assert cxt.node("a")
-    assert cxt.node("a").var("out") == 1
+    assert cxt.node("a").outputs == {"out": 1}
     assert cxt.node("b")
-    assert cxt.node("b").var("out") == 2
+    assert cxt.node("b").outputs == {"out": 2}
     assert cxt.is_done

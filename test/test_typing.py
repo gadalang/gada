@@ -52,30 +52,30 @@ def test_typeof_tuple():
 
 
 @pytest.mark.typing
-def test_match_bool():
-    assert BOOL_TYPE.match(BOOL_VALUE)
+def test_isinstance_bool():
+    assert typing.isinstance(BOOL_VALUE, BOOL_TYPE)
 
 
 @pytest.mark.typing
-def test_match_int():
-    assert INT_TYPE.match(INT_VALUE)
+def test_isinstance_int():
+    assert typing.isinstance(INT_VALUE, INT_TYPE)
 
 
 @pytest.mark.typing
-def test_match_float():
-    assert FLOAT_TYPE.match(FLOAT_VALUE)
+def test_isinstance_float():
+    assert typing.isinstance(FLOAT_VALUE, FLOAT_TYPE)
 
 
 @pytest.mark.typing
-def test_match_string():
-    assert STRING_TYPE.match(STRING_VALUE)
+def test_isinstance_string():
+    assert typing.isinstance(STRING_VALUE, STRING_TYPE)
 
 
 @pytest.mark.typing
-def test_match_list():
-    assert LIST_INT_TYPE.match(LIST_INT_VALUE)
+def test_isinstance_list():
+    assert typing.isinstance(LIST_INT_VALUE, LIST_INT_TYPE)
 
 
 @pytest.mark.typing
-def test_match_tuple():
-    assert TUPLE_INT_STRING_TYPE.match(TUPLE_INT_STRING_VALUE)
+def test_isinstance_tuple():
+    assert typing.isinstance(TUPLE_INT_STRING_VALUE, TUPLE_INT_STRING_TYPE)

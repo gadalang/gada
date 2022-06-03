@@ -1,4 +1,6 @@
 """Package containing a parser for the special syntax used by Gada."""
+from __future__ import annotations
+
 __all__ = ["type"]
 from antlr4 import *
 from .dist.GadaLexer import GadaLexer
@@ -43,12 +45,12 @@ class Visitor(GadaVisitor):
 
 
 def type(input: str, /) -> typing.Type:
-    r'''Parse the textual representation of a Gada type.
-    
+    r"""Parse the textual representation of a Gada type.
+
     .. code-block:: python
 
         >>> from gada import parser
-        >>> 
+        >>>
         >>> parser.type('bool')
         BoolType()
         >>> parser.type('int')
@@ -64,10 +66,10 @@ def type(input: str, /) -> typing.Type:
         >>> parser.type('int | str')
         UnionType([IntType(), StringType()])
         >>>
-    
+
     :param input: textual representation
     :return: represented type
-    '''
+    """
     # lexer
     lexer = GadaLexer(InputStream(input))
     stream = CommonTokenStream(lexer)

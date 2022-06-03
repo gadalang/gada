@@ -1,9 +1,12 @@
 "Package containing everything for running Gada programs."
-__all__ = ["Context", "Program", "from_node", "load"]
+from __future__ import annotations
+
+__all__ = ["NodeInstance", "Context", "Program", "from_node", "load"]
 import yaml
 import re
+from dataclasses import dataclass
 from typing import Callable, Optional, Any, Union
-from gada._model import Node, NodeCall, NodePath, NodeInstance, NodeNotFoundError
+from gada.node import Param, Node, NodeCall, NodePath, NodeNotFoundError
 from gada import runners
 from gada._log import logger
 
@@ -15,7 +18,49 @@ RunnerLoader = Callable[[str], Any]
 VAR_REGEX = re.compile(r"^\s*\{\s*\{\s*(?P<id>\w+)(\.(?P<name>\w+))?\s*\}\s*\}\s*$")
 
 
+@dataclass
+class NodeInstance(object):
+    """Instance of a node that has run.
+
+    :param node: node definition
+    :param step: call of that node from program
+    :param outputs: outputs of that node
+    """
+
+    __slot__ = ("_node", "_step", "_outputs")
+
+    def __init__(
+        self, node: Node, step: NodeCall, /, outputs: Optional[dict] = None
+    ) -> None:
+        self._node: Node = node
+        self._step: NodeCall = step
+        self._outputs: dict = outputs if outputs is not None else {}
+
+    @property
+    def node(self) -> Node:
+        """Node definition"""
+        return self._node
+
+    @property
+    def step(self) -> NodeCall:
+        """Call from the program"""
+        return self._step
+
+    @property
+    def outputs(self) -> dict:
+        """Outputs of the node"""
+        return self._outputs
+
+
 class Context(object):
+    r"""Context storing the state of a running program.
+
+    :param steps: list of nodes
+    :param parent: parent context
+    :param vars: initial global variables
+    :param load_node: how to load nodes
+    :param load_runner: how to load runners
+    """
     __slots__ = (
         "_steps",
         "_parent",
@@ -36,14 +81,6 @@ class Context(object):
         load_node: Optional[NodeLoader] = None,
         load_runner: Optional[RunnerLoader] = None,
     ) -> None:
-        r"""Context for running a list of nodes.
-
-        :param steps: list of nodes
-        :param parent: parent context
-        :param vars: initial variables
-        :param load_node: how to load nodes
-        :param load_runner: how to load runners
-        """
         self._steps: list[NodeCall] = steps if steps is not None else []
         self._parent: Context = parent
         # stack pointer
@@ -63,60 +100,80 @@ class Context(object):
         )
 
     @property
-    def parent(self) -> "Context":
+    def parent(self) -> Optional["Context"]:
+        """Parent context or **None**"""
         return self._parent
 
     @property
     def is_running(self) -> bool:
+        """If there are nodes to run"""
         return self._sp < len(self._steps)
 
     @property
     def is_done(self) -> bool:
+        """If all nodes have been run"""
         return not self.is_running
 
     @property
-    def line(self) -> int:
-        return self._steps[self._sp].line if self.is_running else 0
+    def lineno(self) -> int:
+        """Current line from the source code"""
+        return self._steps[self._sp].lineno if self.is_running else 0
 
     def locals(self) -> dict:
         """Return the variables stored in this context"""
         return dict(self._vars)
 
     def vars(self) -> dict:
-        """Return the variables accessible from this context"""
+        """Return the variables stored in this context and the parent"""
         return (self._parent.vars() if self._parent else {}) | self._vars
 
-    def local(self, name: str, /) -> Any:
-        """Return a local variable by name"""
+    def local(self, name: str, /) -> Optional[Any]:
+        """Return a variable from this context by name.
+
+        :param name: name of a variable
+        :return: it's value or **None**
+        """
         return self._vars.get(name, None)
 
-    def var(self, name: str, /) -> Any:
-        """Return a variable accessible from this context by name"""
+    def var(self, name: str, /) -> Optional[Any]:
+        """Return a variable from this context or the parent by name.
+
+        :param name: name of a variable
+        :return: it's value or **None**
+        """
         if name in self._vars:
             return self._vars[name]
 
         return self._parent.var(name) if self._parent else None
 
-    def node(self, id: str, /) -> NodeInstance:
-        """Get a node instance by id"""
+    def node(self, id: str, /) -> Optional[NodeInstance]:
+        """Get the instance of a node that has run by it's unique id.
+
+        :param id: unique node id
+        :return: it's instance or **None**
+        """
         return self._node_instances.get(id, None)
 
     def step(self, *, cache: Optional[dict] = None) -> "Context":
-        """Run the next node.
+        """Run the next node and stop.
+
+        This function either returns **self** or a new node if running
+        the node opens a new scope (i.e. branchs or loops).
 
         :param cache: cache for storing many results
+        :return: **self** or a new context
         """
         if self.is_done:
             return self
 
         step = self._steps[self._sp]
-        logger.debug(f"run node {step.name} at line {step.line}...")
+        logger.debug(f"run node {step.name} at line {step.lineno}...")
 
         try:
             node = self._load_node(step.name, cache=cache)
             logger.debug(f"node {node.name} loaded...")
         except NodeNotFoundError:
-            raise Exception(f"node {step.name} not found at line {step.line}")
+            raise Exception(f"node {step.name} not found at line {step.lineno}")
 
         cxt = self._run(node, step, cache=cache)
         self._sp = self._sp + 1
@@ -161,7 +218,7 @@ class Context(object):
                 return self.var(id)
 
             # node output
-            return self.node(id).var(name)
+            return self.node(id).outputs.get(name, None)
 
         return {k: find_var(v) for k, v in step.inputs.items()}
 
@@ -184,103 +241,142 @@ class Context(object):
 
 
 class Program(object):
-    __slot__ = ("_config", "_outputs", "_cache")
+    """A program formed of a list of nodes to run.
+
+    :param steps: list of nodes
+    :param name: program name
+    :param inputs: program inputs
+    :param outputs: unique id of a node from the program
+    """
+
+    __slot__ = ("_name", "_steps", "_inputs", "_outputs", "_cache")
 
     def __init__(
-        self, config: dict = None, /, *, name: str = None, steps: list[NodeCall] = None, inputs: Optional[list] = None, outputs: Optional[str] = None
+        self,
+        steps: list[NodeCall],
+        *,
+        name: Optional[str] = None,
+        inputs: Optional[list[Param]] = None,
+        outputs: Optional[str] = None,
     ) -> None:
-        self._config = {
-            "name": name if name is not None else "",
-            "inputs": inputs if inputs is not None else [],
-            "steps": steps if steps is not None else [],
-        } | (config if config is not None else {})
+        self._name: str = name
+        self._steps: list[NodeCall] = list(steps) if steps is not None else []
+        self._inputs: list[Param] = list(inputs) if inputs is not None else []
         self._outputs = outputs
-        self._cache: dict = {}
-
-    @property
-    def is_running(self) -> bool:
-        return self._context.is_running
-
-    @property
-    def is_done(self) -> bool:
-        return self._context.is_done
-
-    @property
-    def line(self) -> int:
-        return self._context.line
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._config})"
+        self._cache = {}
 
     def step(self, inputs: Optional[dict] = None) -> Context:
-        return Context(self._config["steps"], vars=inputs)
+        r"""Run a single step of the program.
 
-    def run(self, inputs: Optional[dict] = None) -> None:
-        ctx = Context(self._config["steps"], vars=inputs)
+        .. code-block:: python
+
+            >>> from gada.program import Program
+            >>>
+            >>> p = Program.from_node("max")
+            >>> ctx = p.step({"a": 1, "b": 2})
+            >>> while not ctx.is_done:
+            ...   ctx = ctx.step()
+            ...
+            >>>
+
+        :param inputs: inputs passed to the program
+        :return: a new context for running the program
+        """
+        return Context(self._steps, vars=inputs)
+
+    def run(self, inputs: Optional[dict] = None) -> Optional[dict]:
+        r"""Run the program until terminated and get its outputs.
+
+        .. code-block:: python
+
+            >>> from gada.program import Program
+            >>>
+            >>> p = Program.from_node("max")
+            >>> p.run({"a": 1, "b": 2})
+            {'out': 2}
+            >>>
+
+        :param inputs: inputs passed to the program
+        :return: program outputs
+        """
+        ctx = Context(self._steps, vars=inputs)
         while not ctx.is_done:
             ctx = ctx.step(cache=self._cache)
 
         if self._outputs:
-            return ctx.node(self._outputs).vars()
+            return ctx.node(self._outputs).outputs
 
+    @staticmethod
+    def from_config(config: dict, /) -> Program:
+        r"""Load a program from a JSON configuration.
 
-def from_node(node: Union[str, NodePath, Node], /) -> Program:
-    r"""Wrap a single node as a runnable program.
+        :param config: configuration
+        :return: loaded program
+        """
+        return Program(
+            name=config.get("name", None),
+            steps=[NodeCall.from_config(_) for _ in config.get("steps", [])],
+            inputs=config.get("inputs", []),
+        )
 
-    .. code-block:: python
+    @staticmethod
+    def from_node(node: Union[str, NodePath, Node], /) -> Program:
+        r"""Wrap a single node as a runnable program.
 
-        >>> from gada import program
-        >>>
-        >>> p = program.from_node("max")
-        >>> p.run({"a": 1, "b": 2})
-        {'out': 2}
-        >>>
-    
-    :param node: reference to a node
-    :return: the node as a program
-    """
-    if isinstance(node, str):
-        node = NodePath(node)
+        .. code-block:: python
 
-    if isinstance(node, NodePath):
-        node = node.load()
+            >>> from gada.program import Program
+            >>>
+            >>> Program.from_node("max")
+            <gada.program.Program ...>
+            >>>
 
-    if not isinstance(node, Node):
-        raise Exception("argument must be a str, NodePath, or Node")
+        :param node: reference to a node
+        :return: the node as a program
+        """
+        if isinstance(node, str):
+            node = NodePath(node)
 
-    return Program(
-        name=node.name,
-        inputs=node.inputs,
-        outputs="node",
-        steps=[NodeCall(
+        if isinstance(node, NodePath):
+            node = node.load()
+
+        if not isinstance(node, Node):
+            raise Exception("argument must be a str, NodePath, or Node")
+
+        return Program(
             name=node.name,
-            id="node",
-            inputs={k["name"]: f'{{{{ {k["name"]} }}}}' for k in node.inputs}
-        )]
-    )
+            inputs=node.inputs,
+            outputs="node",
+            steps=[
+                NodeCall(
+                    name=node.name,
+                    id="node",
+                    inputs={k.name: f"{{{{ {k.name} }}}}" for k in node.inputs},
+                )
+            ],
+        )
 
+    @staticmethod
+    def load(file: str, /) -> Program:
+        r"""Load a program from file.
 
-def load(file: str, /) -> Program:
-    r"""Load a program from file.
+        .. code-block:: python
 
-    .. code-block:: python
+            >>> from gada.program import Program
+            >>>
+            >>> Program.load("max.yml")
+            <gada.program.Program ...>
+            >>>
 
-        >>> from gada import program
-        >>>
-        >>> p = program.load("max.yml")
-        >>> p.run({"a": 1, "b": 2})
-        {'out': 2}
-        >>>
-    
-    :param file: filename or filelike object
-    :return: loaded program
-    """
-    if isinstance(file, str):
-        with open(file, "r") as f:
-            content = f.read()
-    elif hasattr(file, "read"):
-        content = file.read()
-    else:
-        raise Exception("argument must be a str or filelike object")
+        :param file: filename or filelike object
+        :return: loaded program
+        """
+        if isinstance(file, str):
+            with open(file, "r") as f:
+                content = f.read()
+        elif hasattr(file, "read"):
+            content = file.read()
+        else:
+            raise Exception("argument must be a str or filelike object")
 
-    return Program(yaml.safe_load(content))
+        return Program.from_config(yaml.safe_load(content))

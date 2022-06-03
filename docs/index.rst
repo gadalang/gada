@@ -50,6 +50,7 @@ Contents:
    datadir
    typing
    parser
+   node
    program
    testutils
    runner
