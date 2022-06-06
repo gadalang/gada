@@ -6,6 +6,7 @@ import yaml
 import re
 from dataclasses import dataclass
 from typing import Callable, Optional, Any, Union
+from pathlib import Path
 from gada.node import Param, Node, NodeCall, NodePath, NodeNotFoundError
 from gada import runners
 from gada._log import logger
@@ -249,17 +250,19 @@ class Program(object):
     :param outputs: unique id of a node from the program
     """
 
-    __slot__ = ("_name", "_steps", "_inputs", "_outputs", "_cache")
+    __slot__ = ("_name", "_file", "_steps", "_inputs", "_outputs", "_cache")
 
     def __init__(
         self,
         steps: list[NodeCall],
         *,
         name: Optional[str] = None,
+        file: Optional[Path] = None,
         inputs: Optional[list[Param]] = None,
         outputs: Optional[str] = None,
     ) -> None:
         self._name: str = name
+        self._file: Path = file
         self._steps: list[NodeCall] = list(steps) if steps is not None else []
         self._inputs: list[Param] = list(inputs) if inputs is not None else []
         self._outputs = outputs
@@ -310,13 +313,32 @@ class Program(object):
     def from_config(config: dict, /) -> Program:
         r"""Load a program from a JSON configuration.
 
+        .. code-block:: python
+
+            >>> from gada.program import Program
+            >>>
+            >>> Program.from_config({
+            ...   "name": "min",
+            ...   "inputs": [
+            ...     {"name": "a", "type": "int"},
+            ...     {"name": "b", "type": "int"}
+            ...   ],
+            ...   "steps": [
+            ...     {"name": "min", "inputs": {"a": "{{ a }}", "b": "{{ b }}"}}
+            ...   ]
+            ... })
+            ...
+            <gada.program.Program ...>
+            >>>
+
         :param config: configuration
         :return: loaded program
         """
         return Program(
             name=config.get("name", None),
+            file=config.get("file", None),
             steps=[NodeCall.from_config(_) for _ in config.get("steps", [])],
-            inputs=config.get("inputs", []),
+            inputs=[Param.from_config(_) for _ in config.get("inputs", [])],
         )
 
     @staticmethod
@@ -372,11 +394,13 @@ class Program(object):
         :return: loaded program
         """
         if isinstance(file, str):
+            path = Path(file)
             with open(file, "r") as f:
                 content = f.read()
         elif hasattr(file, "read"):
+            path = None
             content = file.read()
         else:
             raise Exception("argument must be a str or filelike object")
 
-        return Program.from_config(yaml.safe_load(content))
+        return Program.from_config(yaml.safe_load(content) | {"file": path})

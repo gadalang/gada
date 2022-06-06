@@ -1,4 +1,4 @@
-# Generated from .\Gada.g4 by ANTLR 4.10.1
+# Generated from gada\parser\dist\Gada.g4 by ANTLR 4.10.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .GadaParser import GadaParser
@@ -26,6 +26,11 @@ class GadaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by GadaParser#typeList.
     def visitTypeList(self, ctx:GadaParser.TypeListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GadaParser#typeVariable.
+    def visitTypeVariable(self, ctx:GadaParser.TypeVariableContext):
         return self.visitChildren(ctx)
 
 

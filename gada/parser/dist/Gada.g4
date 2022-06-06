@@ -10,15 +10,21 @@ block
     ;
 
 typeUnion
-    : type ('|' type)*
+    : typeVariable ('|' typeVariable)*
     ;
 
 typeList
-    : type (',' type)*
+    : typeUnion (',' typeUnion)*
+    ;
+
+typeVariable
+    : item=type
+    | operator='*' item=type
     ;
 
 type
-    : name='int'
+    : name='any'
+    | name='int'
     | name='float'
     | name='str'
     | name='bool'

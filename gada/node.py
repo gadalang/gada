@@ -243,43 +243,50 @@ class Node(object):
     """Represent a node definition.
 
     :param name: name of the node
+    :param module: parent module
     :param file: absolute path to the source code
     :param lineno: line number in the source code
     :param runner: name of runner
     :param is_pure: if the node is pure
     :param inputs: inputs of the node
     :param outputs: outputs of the node
+    :param extra: extra parameters
     """
-
     name: str
+    module: ModuleType
     file: Path
     lineno: int
     runner: str
     is_pure: bool
     inputs: list[Param]
     outputs: list[Param]
+    extras: dict
 
     def __init__(
         self,
         name: str,
         *,
+        module: Optional[ModuleType] = None,
         file: Optional[Path] = None,
         lineno: Optional[int] = None,
         runner: Optional[str] = None,
         is_pure: Optional[bool] = None,
         inputs: Optional[list[Param]] = None,
         outputs: Optional[list[Param]] = None,
+        extras: Optional[dict] = None
     ) -> None:
         object.__setattr__(self, "name", name)
+        object.__setattr__(self, "module", module)
         object.__setattr__(self, "file", file)
         object.__setattr__(self, "lineno", lineno if lineno is not None else 0)
         object.__setattr__(self, "runner", runner)
         object.__setattr__(self, "is_pure", is_pure)
         object.__setattr__(self, "inputs", inputs if inputs is not None else [])
         object.__setattr__(self, "outputs", outputs if outputs is not None else [])
+        object.__setattr__(self, "extras", extras if extras is not None else {})
 
     @staticmethod
-    def from_config(config: dict, /) -> Node:
+    def from_config(config: dict, /, *, module: Optional[ModuleType] = None) -> Node:
         r"""Load a **Node** from a JSON configuration.
 
         .. code-block:: python
@@ -301,20 +308,23 @@ class Node(object):
             >>>
 
         :param config: configuration
+        :param module: parent module
         :return: loaded **Node**
         """
-        name = config.get("name", None)
+        name = config.pop("name", None)
         if not name:
             raise Exception("missing name attribute for node")
 
         return Node(
             name=name,
-            file=config.get("file", None),
-            lineno=config.get("lineno", None),
-            runner=config.get("runner", None),
-            is_pure=config.get("pure", False),
-            inputs=[Param.from_config(_) for _ in config.get("inputs", [])],
-            outputs=[Param.from_config(_) for _ in config.get("outputs", [])],
+            module=module,
+            file=config.pop("file", None),
+            lineno=config.pop("lineno", None),
+            runner=config.pop("runner", None),
+            is_pure=config.pop("pure", False),
+            inputs=[Param.from_config(_) for _ in config.pop("inputs", [])],
+            outputs=[Param.from_config(_) for _ in config.pop("outputs", [])],
+            extras=config
         )
 
 
@@ -385,10 +395,12 @@ class NodePath(object):
         :return: the node if it exists
         """
         try:
-            conf = load_module_config(self._module, cache=cache)
+            mod, _ = _locate_module(self._module)
+
+            conf = load_module_config(mod, cache=cache)
             for _ in conf.get("nodes", []):
                 if _.get("name", None) == self._name:
-                    return Node.from_config(_)
+                    return Node.from_config(_, module=mod)
         except Exception:
             pass
 

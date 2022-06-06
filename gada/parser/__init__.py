@@ -19,19 +19,26 @@ class Visitor(GadaVisitor):
 
     def visitTypeUnion(self, ctx: GadaParser.TypeUnionContext):
         if ctx.getChildCount() == 1:
-            return self.visit(ctx.type_(0))
+            return self.visit(ctx.typeVariable(0))
 
-        return typing.UnionType(map(self.visit, ctx.type_()))
+        return typing.UnionType(map(self.visit, ctx.typeVariable()))
 
     def visitTypeList(self, ctx: GadaParser.TypeListContext):
         if ctx.getChildCount() == 1:
-            return self.visit(ctx.type_(0))
+            return self.visit(ctx.typeUnion(0))
 
-        return map(self.visit, ctx.type_())
+        return map(self.visit, ctx.typeUnion())
+
+    def visitTypeVariable(self, ctx:GadaParser.TypeVariableContext):
+        if ctx.operator:
+            return typing.VariableType(self.visit(ctx.item))
+        
+        return self.visit(ctx.item)
 
     def visitType(self, ctx: GadaParser.TypeContext):
         if ctx.name:
             return {
+                "any": typing.AnyType(),
                 "int": typing.IntType(),
                 "float": typing.FloatType(),
                 "str": typing.StringType(),
@@ -51,6 +58,8 @@ def type(input: str, /) -> typing.Type:
 
         >>> from gada import parser
         >>>
+        >>> parser.type('any')
+        AnyType()
         >>> parser.type('bool')
         BoolType()
         >>> parser.type('int')
@@ -61,6 +70,8 @@ def type(input: str, /) -> typing.Type:
         StringType()
         >>> parser.type('[int]')
         ListType(IntType())
+        >>> parser.type('*int')
+        VariableType(IntType())
         >>> parser.type('(int, str)')
         TupleType([IntType(), StringType()])
         >>> parser.type('int | str')

@@ -50,10 +50,10 @@ Contents:
    datadir
    typing
    parser
+   runner
    node
    program
    testutils
-   runner
    writing
 
 Indices and tables

@@ -3,11 +3,13 @@ from __future__ import annotations
 
 __all__ = [
     "Type",
+    "AnyType",
     "BoolType",
     "IntType",
     "FloatType",
     "StringType",
     "ListType",
+    "VariableType",
     "TupleType",
     "UnionType",
     "isinstance",
@@ -28,6 +30,31 @@ class Type(ABC):
     @abstractmethod
     def _match(self, o: Any, /) -> bool:
         raise NotImplementedError()
+
+
+@dataclass
+class AnyType(Type):
+    r"""Represent any type.
+
+    .. code-block:: python
+
+        >>> t = AnyType()
+        >>> repr(t)
+        'AnyType()'
+        >>> str(t)
+        'any'
+        >>>
+
+    """
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+    def __str__(self) -> str:
+        return "any"
+
+    def _match(self, o: Any, /) -> bool:
+        return True
 
 
 @dataclass
@@ -162,6 +189,39 @@ class ListType(Type):
 
         if not self._item_type or not o:
             return True
+
+        return self._item_type._match(o[0])
+
+
+@dataclass
+class VariableType(Type):
+    r"""Represent one or multiple values of the same type.
+
+    .. code-block:: python
+
+        >>> t = VariableType(IntType())
+        >>> repr(t)
+        'VariableType(IntType())'
+        >>> str(t)
+        '*int'
+        >>>
+
+    :param item_type: type of items
+    """
+    __slot__ = "_item_type"
+
+    def __init__(self, item_type: Type, /) -> None:
+        self._item_type = item_type
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({repr(self._item_type)})"
+
+    def __str__(self) -> str:
+        return f"*{self._item_type}"
+
+    def _match(self, o: Any, /) -> bool:
+        if _isinstance(o, list):
+            return self._item_type._match(o[0]) if o else True
 
         return self._item_type._match(o[0])
 

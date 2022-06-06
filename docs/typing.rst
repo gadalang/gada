@@ -10,6 +10,9 @@
 .. autoclass:: gada.typing::Type
     :members:
 
+.. autoclass:: gada.typing::AnyType
+    :members:
+
 .. autoclass:: gada.typing::BoolType
     :members:
 
@@ -23,6 +26,9 @@
     :members:
 
 .. autoclass:: gada.typing::ListType
+    :members:
+
+.. autoclass:: gada.typing::VariableType
     :members:
 
 .. autoclass:: gada.typing::TupleType

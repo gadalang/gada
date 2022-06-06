@@ -1,8 +1,14 @@
 .. -*- coding: utf-8 -*-
 .. _runner:
 
-generic Runner
-==============
+:mod:`gada.runners` Module
+==========================
+
+.. automodule:: gada.runners
+    :noindex:
+
+**generic** Runner
+------------------
 
 .. automodule:: gada.runners.generic
     :noindex:
@@ -12,3 +18,11 @@ generic Runner
 .. automethod:: gada.runners.generic::get_command_format
 
 .. automethod:: gada.runners.generic::run
+
+**pymodule** Runner
+-------------------
+
+.. automodule:: gada.runners.pymodule
+    :noindex:
+
+.. automethod:: gada.runners.pymodule::run

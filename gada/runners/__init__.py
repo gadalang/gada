@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
+"""Package where runners can be installed as plugins."""
 from __future__ import annotations
 
 __all__ = ["run", "load"]
-from typing import Optional
+from gada.node import Node
 
 
 def run(
-    comp,
+    node: Node,
     *,
     gada_config: dict,
-    node_config: dict,
-    argv: Optional[list[str]] = None,
+    inputs: dict,
     stdin=None,
     stdout=None,
     stderr=None,
 ):
     """Run a node.
 
-    :param comp: loaded component
+    :param node: node definition
     :param gada_config: gada configuration
     :param node_config: node configuration
     :param argv: additional CLI arguments

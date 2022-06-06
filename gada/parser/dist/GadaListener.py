@@ -1,4 +1,4 @@
-# Generated from .\Gada.g4 by ANTLR 4.10.1
+# Generated from gada\parser\dist\Gada.g4 by ANTLR 4.10.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .GadaParser import GadaParser
@@ -41,6 +41,15 @@ class GadaListener(ParseTreeListener):
 
     # Exit a parse tree produced by GadaParser#typeList.
     def exitTypeList(self, ctx:GadaParser.TypeListContext):
+        pass
+
+
+    # Enter a parse tree produced by GadaParser#typeVariable.
+    def enterTypeVariable(self, ctx:GadaParser.TypeVariableContext):
+        pass
+
+    # Exit a parse tree produced by GadaParser#typeVariable.
+    def exitTypeVariable(self, ctx:GadaParser.TypeVariableContext):
         pass
 
 
