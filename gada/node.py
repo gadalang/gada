@@ -17,11 +17,10 @@ from types import ModuleType
 from typing import Optional, Any, Tuple, Union
 from pathlib import Path
 import yaml
-from gada import typing
-from gada import parser
+from gada import typing, parser, _cache
+from gada._log import logger
 
 
-_GADA_YML_FILENAME = "gada.yml"
 _GADA_LANG_MODULE = "gada._lang"
 
 
@@ -30,53 +29,12 @@ class NodeNotFoundError(Exception):
         super().__init__(f"node {node} not found")
 
 
-def _get_cached(cache: dict, mod: ModuleType, key: str, /, defaults: Any = None) -> Any:
-    if cache is None or mod not in cache or key not in cache[mod]:
-        return defaults
-
-    return cache[mod][key]
-
-
-def _set_cached(cache: dict, mod: ModuleType, key: str, val: Any) -> None:
-    if cache is None:
-        return
-
-    cache.setdefault(mod, {})[key] = val
-
-
-def _locate_module(
-    module: Union[ModuleType, str, list[str]], /, *, cache: Optional[dict] = None
-) -> Tuple[ModuleType, Path]:
-    """Locate a module installed in ``PYTHONPATH``.
-
-    This will raise ``ModuleNotFoundError`` if the module is not installed.
-
-    :param module: module or name
-    :param cache: cache for storing results
-    :return: a tuple (module, absolute path)
-    """
-    if not isinstance(module, ModuleType):
-        if not isinstance(module, str):
-            module = ".".join(module)
-
-        module = importlib.import_module(module)
-
-    path = _get_cached(cache, module, "location")
-    if path is None:
-        path = Path(module.__file__).parent.absolute()
-        _set_cached(cache, module, "location", path)
-
-    return module, path
-
-
 def dump_module_config(
     module: Union[ModuleType, str, list[str]],
     /,
-    config: dict,
-    *,
-    cache: Optional[dict] = None,
-) -> dict:
-    r"""Dump ``gada.yml`` to a module installed in ``PYTHONPATH``.
+    config: dict
+) -> None:
+    r"""Dump ``gada.yml`` to a module installed in **PYTHONPATH**.
 
     .. code-block:: python
 
@@ -89,22 +47,18 @@ def dump_module_config(
         >>> gada.dump_module_config(testnodes, {'a': 'b'})
         >>>
 
-    This will raise ``ModuleNotFoundError`` if the module is not installed.
+    This will raise **ModuleNotFoundError** if the module is not installed.
 
     :param module: module or path
     :param config: configuration to dump
     """
-    mod, path = _locate_module(module)
-
-    _set_cached(cache, mod, "config", None)
-    with open(path / _GADA_YML_FILENAME, "w+") as f:
-        f.write(yaml.safe_dump(config))
+    _cache.dump_module_config(module, config=config)
 
 
 def load_module_config(
-    module: Union[ModuleType, str, list[str]], /, *, cache: Optional[dict] = None
+    module: Union[ModuleType, str, list[str]], /
 ) -> dict:
-    r"""Load ``gada.yml`` from a module installed in ``PYTHONPATH``.
+    r"""Load ``gada.yml`` from a module installed in **PYTHONPATH**.
 
     .. code-block:: python
 
@@ -121,29 +75,16 @@ def load_module_config(
         {'a': 'b'}
         >>>
 
-    This will raise ``ModuleNotFoundError`` if the module is not installed.
+    This will raise **ModuleNotFoundError** if the module is not installed.
 
     :param module: module or path
-    :param cache: cache for storing results
     :return: configuration
     """
-    mod, path = _locate_module(module)
-
-    conf = _get_cached(cache, mod, "config")
-    if conf is None:
-        try:
-            with open(path / _GADA_YML_FILENAME, "r") as f:
-                conf = yaml.safe_load(f.read())
-        except FileNotFoundError:
-            conf = {}
-
-        _set_cached(cache, mod, "config", conf)
-
-    return conf
+    return _cache.load_module_config(module)
 
 
 def nodes(
-    module: Union[ModuleType, str, list[str]], /, *, cache: Optional[dict] = None
+    module: Union[ModuleType, str, list[str]], /
 ) -> list[dict]:
     r"""Get nodes defined in a module.
 
@@ -171,13 +112,12 @@ def nodes(
         [{'name': 'max'}, {'name': 'min'}]
         >>>
 
-    This will raise ``ModuleNotFoundError`` if the module is not installed.
+    This will raise **ModuleNotFoundError** if the module is not installed.
 
     :param module: module or path
-    :param cache: cache for storing results
     :return: a list of nodes
     """
-    return load_module_config(module, cache=cache).get("nodes", [])
+    return load_module_config(module).get("nodes", [])
 
 
 @dataclass(frozen=True)
@@ -204,7 +144,7 @@ class Param(object):
     ) -> None:
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "value", value)
-        object.__setattr__(self, "type", type)
+        object.__setattr__(self, "type", type if type is not None else typing.AnyType())
         object.__setattr__(self, "help", help)
 
     @staticmethod
@@ -370,17 +310,14 @@ class NodePath(object):
         """Name of the node"""
         return self._name
 
-    def absolute(self, *, cache: Optional[dict] = None) -> Path:
+    def absolute(self) -> Path:
         """Get the absolute path to parent module.
 
         This will raise **ModuleNotFoundError** if module is not in the **PYTHONPATH**.
-
-        :param cache: cache for storing results
         """
-        _, path = _locate_module(self._module, cache=cache)
-        return path
+        return _cache.get_module_path(self._module)
 
-    def load(self, *, cache: Optional[dict] = None) -> Node:
+    def load(self) -> Node:
         r"""Load the node pointed by this path.
 
         .. code-block:: python
@@ -390,23 +327,26 @@ class NodePath(object):
             >>>
 
         This will raise **ModuleNotFoundError** if module is not in the **PYTHONPATH**.
-
-        :param cache: cache for storing results
         :return: the node if it exists
         """
         try:
-            mod, _ = _locate_module(self._module)
-
-            conf = load_module_config(mod, cache=cache)
+            mod = _cache.load_module(self._module)
+            node = _cache.get_cached_node(mod, self._name)
+            if node is not None:
+                return node
+        
+            conf = load_module_config(mod)
             for _ in conf.get("nodes", []):
                 if _.get("name", None) == self._name:
-                    return Node.from_config(_, module=mod)
-        except Exception:
-            pass
+                    node = Node.from_config(_, module=mod)
+                    _cache.set_cached_node(mod, self._name, node)
+                    return node
+        except Exception as e:
+            logger.exception(e)
 
         raise NodeNotFoundError(self)
 
-    def exists(self, *, cache: Optional[dict] = None) -> bool:
+    def exists(self) -> bool:
         r"""Whether this node exists.
 
         .. code-block:: python
@@ -419,11 +359,10 @@ class NodePath(object):
             False
             >>>
 
-        :param cache: cache for storing results
         :return: if the node exists
         """
         try:
-            self.load(cache=cache)
+            self.load()
             return True
         except Exception:
             return False

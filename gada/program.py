@@ -94,7 +94,7 @@ class Context(object):
         self._load_node: NodeLoader = (
             load_node
             if load_node is not None
-            else lambda name, cache: NodePath(name).load(cache=cache)
+            else lambda name: NodePath(name).load()
         )
         self._load_runner: RunnerLoader = (
             load_runner if load_runner is not None else runners.load
@@ -155,13 +155,12 @@ class Context(object):
         """
         return self._node_instances.get(id, None)
 
-    def step(self, *, cache: Optional[dict] = None) -> "Context":
+    def step(self) -> "Context":
         """Run the next node and stop.
 
         This function either returns **self** or a new node if running
         the node opens a new scope (i.e. branchs or loops).
 
-        :param cache: cache for storing many results
         :return: **self** or a new context
         """
         if self.is_done:
@@ -171,17 +170,17 @@ class Context(object):
         logger.debug(f"run node {step.name} at line {step.lineno}...")
 
         try:
-            node = self._load_node(step.name, cache=cache)
+            node = self._load_node(step.name)
             logger.debug(f"node {node.name} loaded...")
-        except NodeNotFoundError:
-            raise Exception(f"node {step.name} not found at line {step.lineno}")
+        except NodeNotFoundError as e:
+            raise Exception(f"node {step.name} not found at line {step.lineno}") from e
 
-        cxt = self._run(node, step, cache=cache)
+        cxt = self._run(node, step)
         self._sp = self._sp + 1
         return cxt
 
     def _run(
-        self, node: Node, step: NodeCall, /, *, cache: Optional[dict] = None
+        self, node: Node, step: NodeCall, /
     ) -> "Context":
         if node.is_pure:
             self._store(node, step, {})
@@ -189,14 +188,14 @@ class Context(object):
 
         try:
             runner = self._load_runner(node.runner)
-        except Exception:
-            raise Exception(f"runner {node.runner} not found for node {node.name}")
+        except Exception as e:
+            raise Exception(f"runner {node.runner} not found for node {node.name}") from e
 
         logger.debug(f"runner {node.runner} loaded...")
 
         inputs = self._gather_inputs(step)
         logger.debug(f"node inputs: {inputs}")
-        outputs = runner.run(node=node, inputs=inputs, cache=cache)
+        outputs = runner.run(node=node, inputs=inputs)
         logger.debug(f"node outputs: {outputs}")
         self._store(node, step, outputs)
         return self
@@ -250,7 +249,7 @@ class Program(object):
     :param outputs: unique id of a node from the program
     """
 
-    __slot__ = ("_name", "_file", "_steps", "_inputs", "_outputs", "_cache")
+    __slot__ = ("_name", "_file", "_steps", "_inputs", "_outputs")
 
     def __init__(
         self,
@@ -266,7 +265,6 @@ class Program(object):
         self._steps: list[NodeCall] = list(steps) if steps is not None else []
         self._inputs: list[Param] = list(inputs) if inputs is not None else []
         self._outputs = outputs
-        self._cache = {}
 
     def step(self, inputs: Optional[dict] = None) -> Context:
         r"""Run a single step of the program.
@@ -304,7 +302,7 @@ class Program(object):
         """
         ctx = Context(self._steps, vars=inputs)
         while not ctx.is_done:
-            ctx = ctx.step(cache=self._cache)
+            ctx = ctx.step()
 
         if self._outputs:
             return ctx.node(self._outputs).outputs
