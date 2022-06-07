@@ -58,44 +58,7 @@ def main(
     stdout=None,
     stderr=None,
 ):
-    """Gada main:
-
-    .. code-block:: python
-
-        >>> import gada
-        >>>
-        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
-        >>> gada.test_utils.write_testnodes_config({
-        ...     'nodes': {
-        ...         'echo': {
-        ...             'runner': 'generic',
-        ...             'bin': 'echo'
-        ...         }
-        ...     }
-        ... })
-        >>>
-        >>> # Need to create fake stdin and stdout for unittests
-        >>> with gada.test_utils.PipeStream() as stdin:
-        ...     with gada.test_utils.PipeStream() as stdout:
-        ...         # Run node with CLI arguments
-        ...         gada.main(
-        ...             ['gada', 'testnodes.echo', 'hello'],
-        ...             stdin=stdin.reader,
-        ...             stdout=stdout.writer,
-        ...             stderr=stdout.writer
-        ...         )
-        ...
-        ...         # Close writer end so we can read form it
-        ...         stdout.writer.close()
-        ...
-        ...         # Read node output
-        ...         stdout.reader.read().decode().strip()
-        'hello'
-        >>>
-
-    The three parameters ``stdin``, ``stdout`` or ``stderr`` are provided as a convenience
-    for writing unit tests when you can't use ``sys.stdin`` or ``sys.stdout``, or simply
-    when you want to be able to read from the output.
+    """Gada main.
 
     :param argv: command line arguments
     :param stdin: input stream

@@ -7,7 +7,7 @@ import pytest
 import shutil
 import functools
 import gada
-from gada import test_utils
+from gada import test_utils, _cache
 
 TESTNODES_PATH: Path = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), "testnodes")))
 '''Absolute path to ``gada/test/testnodes``'''
@@ -24,23 +24,23 @@ GADA_CONFIG = {"bins": {}}
 CONFIG_NO_NODES = {"runner": "generic"}
 
 CONFIG_NO_RUNNER = {
-    "nodes": {
-        "hello": {"bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
-    }
+    "nodes": [
+        {"name": "hello", "bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
+    ]
 }
 
 CONFIG_UNKNOWN_RUNNER = {
     "runner": "unknown",
-    "nodes": {
-        "hello": {"bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
-    },
+    "nodes": [
+        {"name": "hello", "bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
+    ],
 }
 
 CONFIG_NODES = {
     "runner": "generic",
-    "nodes": {
-        "hello": {"bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
-    },
+    "nodes": [
+        {"name": "hello", "bin": "python", "argv": r"${comp_dir}/__init__.py ${argv}"}
+    ],
 }
 
 CONFIG_HELLO_NODE = {
@@ -110,6 +110,7 @@ def del_prog_config() -> None:
 def clean_test(fun):
     @functools.wraps(fun)
     def wrapper(*args, **kwargs):
+        _cache.clear()
         del_module_config()
         del_prog_config()
         

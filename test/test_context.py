@@ -1,35 +1,39 @@
 '''Tests on the ``gada.program.Context`` class'''
 from __future__ import annotations
-from gada import Node, NodeCall
+from gada.node import Node, NodeCall, Param
 from gada import program
 
 
-CALL_NODE_A = NodeCall(
-    name="A",
-    id="a",
-    inputs={"in": 1}
-)
+CALL_NODE_A = NodeCall.from_config({
+    "name": "A",
+    "id": "a",
+    "inputs": {
+        "in": 1
+    }
+})
 
-CALL_NODE_B = NodeCall(
-    name="B",
-    id="b",
-    inputs={"in": "{{ a.out }}"}
-)
+CALL_NODE_B = NodeCall.from_config({
+    "name": "B",
+    "id": "b",
+    "inputs": {
+        "in": "{{ a.out }}"
+    }
+})
 
 def MockContext(steps: list[NodeCall]) -> program.Context:
-    NODE_A = Node(
-        name="A",
-        runner="mock_runner",
-        inputs=[{"name": "in", "type": "number"}],
-        outputs=[{"name": "out", "type": "number"}]
-    )
+    NODE_A = Node.from_config({
+        "name": "A",
+        "runner": "mock_runner",
+        "inputs": [{"name": "in", "type": "int"}],
+        "outputs": [{"name": "out", "type": "int"}]
+    })
 
-    NODE_B = Node(
-        name="B",
-        runner="mock_runner",
-        inputs=[{"name": "in", "type": "number"}],
-        outputs=[{"name": "out", "type": "number"}]
-    )
+    NODE_B = Node.from_config({
+        "name": "B",
+        "runner": "mock_runner",
+        "inputs": [{"name": "in", "type": "int"}],
+        "outputs": [{"name": "out", "type": "int"}]
+    })
     
     def run_a(inputs: dict) -> dict:
         return {"out": inputs.get("in", 0)}

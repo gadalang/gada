@@ -1,7 +1,15 @@
 """Cache for runtime data."""
 from __future__ import annotations
 
-__all__ = ["load_module", "get_module_path", "load_module_config", "dump_module_config", "get_cached_node", "set_cached_node"]
+__all__ = [
+    "clear",
+    "load_module",
+    "get_module_path",
+    "load_module_config",
+    "dump_module_config",
+    "get_cached_node",
+    "set_cached_node",
+]
 from types import ModuleType
 from typing import Optional, Union, Tuple, Any
 import importlib
@@ -16,9 +24,18 @@ _MODULE_CONFIG_CACHE = {}
 _MODULE_NODE_CACHE = {}
 
 
+def clear() -> None:
+    """Clear the cache"""
+    global _LOAD_MODULE_CACHE, _MODULE_PATH_CACHE, _MODULE_CONFIG_CACHE, _MODULE_NODE_CACHE
+    _LOAD_MODULE_CACHE = {}
+    _MODULE_PATH_CACHE = {}
+    _MODULE_CONFIG_CACHE = {}
+    _MODULE_NODE_CACHE = {}
+
+
 def load_module(module: Union[ModuleType, str, list[str]], /) -> ModuleType:
     """Load a module by path and cache the result.
-    
+
     This will raise **ModuleNotFoundError** if the module is not installed.
 
     :param module: name or path to module
@@ -34,13 +51,11 @@ def load_module(module: Union[ModuleType, str, list[str]], /) -> ModuleType:
     if mod is None:
         mod = importlib.import_module(module)
         _LOAD_MODULE_CACHE[module] = mod
-    
+
     return mod
 
 
-def get_module_path(
-    module: Union[ModuleType, str, list[str]], /
-) -> Path:
+def get_module_path(module: Union[ModuleType, str, list[str]], /) -> Path:
     """Locate a module installed in **PYTHONPATH**.
 
     This will raise **ModuleNotFoundError** if the module is not installed.
@@ -58,9 +73,7 @@ def get_module_path(
     return path
 
 
-def load_module_config(
-    module: Union[ModuleType, str, list[str]]
-) -> dict:
+def load_module_config(module: Union[ModuleType, str, list[str]]) -> dict:
     r"""Load ``gada.yml`` from a module installed in **PYTHONPATH**.
 
     This will raise **ModuleNotFoundError** if the module is not installed.
@@ -85,9 +98,7 @@ def load_module_config(
 
 
 def dump_module_config(
-    module: Union[ModuleType, str, list[str]],
-    /,
-    config: dict
+    module: Union[ModuleType, str, list[str]], /, config: dict
 ) -> None:
     r"""Dump ``gada.yml`` to a module installed in **PYTHONPATH**.
 

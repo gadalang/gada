@@ -17,7 +17,7 @@ def _load_module(name: str):
 
 def run(node: Node, *, inputs: dict) -> dict:
     r"""Run a node contained in a Python module.
-    
+
     :param node: node definition
     :param inputs: node inputs
     :return: node outputs
@@ -30,7 +30,9 @@ def run(node: Node, *, inputs: dict) -> dict:
         raise Exception(f"missing entrypoint for node {node.name}")
 
     # Load module if explicitely configured
-    mod = _load_module(node.extras["module"]) if "module" in node.extras else node.module
+    mod = (
+        _load_module(node.extras["module"]) if "module" in node.extras else node.module
+    )
 
     # Check the entrypoint exists
     fun = getattr(mod, entrypoint, None)

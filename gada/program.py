@@ -92,9 +92,7 @@ class Context(object):
         self._node_instances: dict[str, NodeInstance] = {}
         # loaders
         self._load_node: NodeLoader = (
-            load_node
-            if load_node is not None
-            else lambda name: NodePath(name).load()
+            load_node if load_node is not None else lambda name: NodePath(name).load()
         )
         self._load_runner: RunnerLoader = (
             load_runner if load_runner is not None else runners.load
@@ -179,9 +177,7 @@ class Context(object):
         self._sp = self._sp + 1
         return cxt
 
-    def _run(
-        self, node: Node, step: NodeCall, /
-    ) -> "Context":
+    def _run(self, node: Node, step: NodeCall, /) -> "Context":
         if node.is_pure:
             self._store(node, step, {})
             return self
@@ -189,7 +185,9 @@ class Context(object):
         try:
             runner = self._load_runner(node.runner)
         except Exception as e:
-            raise Exception(f"runner {node.runner} not found for node {node.name}") from e
+            raise Exception(
+                f"runner {node.runner} not found for node {node.name}"
+            ) from e
 
         logger.debug(f"runner {node.runner} loaded...")
 
@@ -379,14 +377,6 @@ class Program(object):
     @staticmethod
     def load(file: str, /) -> Program:
         r"""Load a program from file.
-
-        .. code-block:: python
-
-            >>> from gada.program import Program
-            >>>
-            >>> Program.load("max.yml")
-            <gada.program.Program ...>
-            >>>
 
         :param file: filename or filelike object
         :return: loaded program

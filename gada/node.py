@@ -30,21 +30,19 @@ class NodeNotFoundError(Exception):
 
 
 def dump_module_config(
-    module: Union[ModuleType, str, list[str]],
-    /,
-    config: dict
+    module: Union[ModuleType, str, list[str]], /, config: dict
 ) -> None:
     r"""Dump ``gada.yml`` to a module installed in **PYTHONPATH**.
 
     .. code-block:: python
 
-        >>> import gada
+        >>> from gada import node
         >>>
-        >>> gada.dump_module_config('test.testnodes', {'a': 'b'})
-        >>> gada.dump_module_config(['test', 'testnodes'], {'a': 'b'})
+        >>> node.dump_module_config('test.testnodes', {'a': 'b'})
+        >>> node.dump_module_config(['test', 'testnodes'], {'a': 'b'})
         >>>
         >>> from test import testnodes
-        >>> gada.dump_module_config(testnodes, {'a': 'b'})
+        >>> node.dump_module_config(testnodes, {'a': 'b'})
         >>>
 
     This will raise **ModuleNotFoundError** if the module is not installed.
@@ -55,23 +53,21 @@ def dump_module_config(
     _cache.dump_module_config(module, config=config)
 
 
-def load_module_config(
-    module: Union[ModuleType, str, list[str]], /
-) -> dict:
+def load_module_config(module: Union[ModuleType, str, list[str]], /) -> dict:
     r"""Load ``gada.yml`` from a module installed in **PYTHONPATH**.
 
     .. code-block:: python
 
-        >>> import gada
+        >>> from gada import node
         >>>
-        >>> gada.dump_module_config('test.testnodes', {'a': 'b'})
-        >>> gada.load_module_config('test.testnodes')
+        >>> node.dump_module_config('test.testnodes', {'a': 'b'})
+        >>> node.load_module_config('test.testnodes')
         {'a': 'b'}
-        >>> gada.load_module_config(['test', 'testnodes'])
+        >>> node.load_module_config(['test', 'testnodes'])
         {'a': 'b'}
         >>>
         >>> from test import testnodes
-        >>> gada.load_module_config(testnodes)
+        >>> node.load_module_config(testnodes)
         {'a': 'b'}
         >>>
 
@@ -83,16 +79,14 @@ def load_module_config(
     return _cache.load_module_config(module)
 
 
-def nodes(
-    module: Union[ModuleType, str, list[str]], /
-) -> list[dict]:
+def nodes(module: Union[ModuleType, str, list[str]], /) -> list[dict]:
     r"""Get nodes defined in a module.
 
     .. code-block:: python
 
-        >>> import gada
+        >>> from gada import node
         >>>
-        >>> gada.dump_module_config(
+        >>> node.dump_module_config(
         ...     'test.testnodes',
         ...     {
         ...         'nodes': [
@@ -102,13 +96,13 @@ def nodes(
         ...     }
         ... )
         >>>
-        >>> gada.nodes('test.testnodes')
+        >>> node.nodes('test.testnodes')
         [{'name': 'max'}, {'name': 'min'}]
-        >>> gada.nodes(['test', 'testnodes'])
+        >>> node.nodes(['test', 'testnodes'])
         [{'name': 'max'}, {'name': 'min'}]
         >>>
         >>> from test import testnodes
-        >>> gada.nodes(testnodes)
+        >>> node.nodes(testnodes)
         [{'name': 'max'}, {'name': 'min'}]
         >>>
 
@@ -192,6 +186,7 @@ class Node(object):
     :param outputs: outputs of the node
     :param extra: extra parameters
     """
+
     name: str
     module: ModuleType
     file: Path
@@ -213,7 +208,7 @@ class Node(object):
         is_pure: Optional[bool] = None,
         inputs: Optional[list[Param]] = None,
         outputs: Optional[list[Param]] = None,
-        extras: Optional[dict] = None
+        extras: Optional[dict] = None,
     ) -> None:
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "module", module)
@@ -264,7 +259,7 @@ class Node(object):
             is_pure=config.pop("pure", False),
             inputs=[Param.from_config(_) for _ in config.pop("inputs", [])],
             outputs=[Param.from_config(_) for _ in config.pop("outputs", [])],
-            extras=config
+            extras=config,
         )
 
 
@@ -334,7 +329,7 @@ class NodePath(object):
             node = _cache.get_cached_node(mod, self._name)
             if node is not None:
                 return node
-        
+
             conf = load_module_config(mod)
             for _ in conf.get("nodes", []):
                 if _.get("name", None) == self._name:
@@ -351,11 +346,11 @@ class NodePath(object):
 
         .. code-block:: python
 
-            >>> import gada
+            >>> from gada import node
             >>>
-            >>> gada.NodePath('max').exists()
+            >>> node.NodePath('max').exists()
             True
-            >>> gada.NodePath('unknown').exists()
+            >>> node.NodePath('unknown').exists()
             False
             >>>
 

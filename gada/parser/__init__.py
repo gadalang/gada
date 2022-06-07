@@ -29,10 +29,10 @@ class Visitor(GadaVisitor):
 
         return map(self.visit, ctx.typeUnion())
 
-    def visitTypeVariable(self, ctx:GadaParser.TypeVariableContext):
+    def visitTypeVariable(self, ctx: GadaParser.TypeVariableContext):
         if ctx.operator:
             return typing.VariableType(self.visit(ctx.item))
-        
+
         return self.visit(ctx.item)
 
     def visitType(self, ctx: GadaParser.TypeContext):

@@ -85,26 +85,7 @@ class PipeStream:
 
 
 def run(argv: Optional[list[str]] = None) -> tuple[str, str]:
-    """Run a gada node and return a tuple ``(stdout, stderr)``:
-
-    .. code-block:: python
-
-        >>> import gada
-        >>>
-        >>> # Overwrite "gada/test/testnodes/config.yml" for this test
-        >>> gada.test_utils.write_testnodes_config({
-        ...     'nodes': {
-        ...         'echo': {
-        ...             'runner': 'generic',
-        ...             'bin': 'echo'
-        ...         }
-        ...     }
-        ... })
-        >>>
-        >>> stdout, stderr = gada.test_utils.run(['testnodes.echo', 'hello'])
-        >>> stdout.strip()
-        'hello'
-        >>>
+    """Run a gada node and return a tuple ``(stdout, stderr)``.
 
     :param argv: CLI arguments
     :return: ``(stdout, stderr)`` tuple
