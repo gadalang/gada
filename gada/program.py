@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Any, Union
 from pathlib import Path
 from gada.node import Param, Node, NodeCall, NodePath, NodeNotFoundError
-from gada import runners
+from gada import runners, typing
 from gada._log import logger
 
 
@@ -124,7 +124,9 @@ class Context(object):
 
     def vars(self) -> dict:
         """Return the variables stored in this context and the parent"""
-        return (self._parent.vars() if self._parent else {}) | self._vars
+        d = (self._parent.vars() if self._parent else {})
+        d.update(self._vars)
+        return d
 
     def local(self, name: str, /) -> Optional[Any]:
         """Return a variable from this context by name.
@@ -193,8 +195,10 @@ class Context(object):
 
         inputs = self._gather_inputs(step)
         logger.debug(f"node inputs: {inputs}")
+        self._check_node_inputs(node, inputs=inputs)
         outputs = runner.run(node=node, inputs=inputs)
         logger.debug(f"node outputs: {outputs}")
+        self._check_node_outputs(node, outputs=outputs)
         self._store(node, step, outputs)
         return self
 
@@ -219,6 +223,29 @@ class Context(object):
             return self.node(id).outputs.get(name, None)
 
         return {k: find_var(v) for k, v in step.inputs.items()}
+
+    def _check_node_inputs(self, node: Node, /, inputs: dict) -> None:
+        params = {_.name: _ for _ in node.inputs}
+
+        for k, v in inputs.items():
+            param = params.get(k, None)
+            if param is None:
+                raise Exception(f"unknown input {node.name}.{k}")
+            
+            if not typing.isinstance(v, param.type):
+                raise Exception(f"invalid input for {node.name}.{k}: expected {param.type}, got {type(v)}")
+
+    def _check_node_outputs(self, node: Node, /, outputs: dict) -> None:
+        params = {_.name: _ for _ in node.outputs}
+
+        for k, v in outputs.items():
+            param = params.get(k, None)
+            if param is None:
+                raise Exception(f"unknown output {node.name}.{k}")
+            
+            if not typing.isinstance(v, param.type):
+                raise Exception(f"invalid output for {node.name}.{k}: expected {param.type}, got {type(v)}")
+            
 
     def _store(self, node: Node, step: NodeCall, /, outputs: dict) -> None:
         """Store results of step execution.
@@ -391,4 +418,6 @@ class Program(object):
         else:
             raise Exception("argument must be a str or filelike object")
 
-        return Program.from_config(yaml.safe_load(content) | {"file": path})
+        conf = yaml.safe_load(content)
+        conf["file"] = path
+        return Program.from_config(conf)
