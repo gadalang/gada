@@ -1,4 +1,5 @@
 '''Tests on the ``gada.program.Context`` class'''
+from __future__ import annotations
 from gada import Node, NodeCall
 from gada import program
 
