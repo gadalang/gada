@@ -1,0 +1,18 @@
+type: object
+properties:
+  runner:
+    type: string
+    description: Configure the global runner
+  nodes:
+    type: array
+    items:
+      type: object
+      properties:
+        runner:
+          type: string
+          description: Runner for this node
+        name:
+          type: string
+          description: Name of the node
+      required:
+      - name

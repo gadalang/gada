@@ -11,11 +11,16 @@ __all__ = [
     "set_cached_node",
 ]
 from types import ModuleType
-from typing import Optional, Union, Tuple, Any
+from typing import TYPE_CHECKING
 import importlib
+from pkgutil import ModuleInfo
 from pathlib import Path
 import yaml
 
+if TYPE_CHECKING:
+    from typing import Any, Union, Iterable
+
+    ModuleLike = Union[ModuleInfo, ModuleType, str, Iterable[str]]
 
 _GADA_YML_FILENAME = "gada.yml"
 _LOAD_MODULE_CACHE = {}
@@ -33,7 +38,7 @@ def clear() -> None:
     _MODULE_NODE_CACHE = {}
 
 
-def load_module(module: Union[ModuleType, str, list[str]], /) -> ModuleType:
+def load_module(module: ModuleLike, /) -> ModuleType:
     """Load a module by path and cache the result.
 
     This will raise **ModuleNotFoundError** if the module is not installed.
@@ -44,7 +49,9 @@ def load_module(module: Union[ModuleType, str, list[str]], /) -> ModuleType:
     if isinstance(module, ModuleType):
         return module
 
-    if isinstance(module, list):
+    if isinstance(module, ModuleInfo):
+        module = module.name
+    elif isinstance(module, list):
         module = ".".join(module)
 
     mod = _LOAD_MODULE_CACHE.get(module, None)
@@ -55,7 +62,7 @@ def load_module(module: Union[ModuleType, str, list[str]], /) -> ModuleType:
     return mod
 
 
-def get_module_path(module: Union[ModuleType, str, list[str]], /) -> Path:
+def get_module_path(module: ModuleLike, /) -> Path:
     """Locate a module installed in **PYTHONPATH**.
 
     This will raise **ModuleNotFoundError** if the module is not installed.
@@ -67,13 +74,17 @@ def get_module_path(module: Union[ModuleType, str, list[str]], /) -> Path:
 
     path = _MODULE_PATH_CACHE.get(mod, None)
     if path is None:
-        path = Path(mod.__file__).parent.absolute()
+        if isinstance(mod, ModuleInfo):
+            path = Path(mod.module_finder.path) / mod.name
+        else:
+            path = Path(mod.__file__).parent
+        path = path.absolute()
         _MODULE_PATH_CACHE[mod] = path
 
     return path
 
 
-def load_module_config(module: Union[ModuleType, str, list[str]]) -> dict:
+def load_module_config(module: ModuleLike) -> dict:
     r"""Load ``gada.yml`` from a module installed in **PYTHONPATH**.
 
     This will raise **ModuleNotFoundError** if the module is not installed.
@@ -97,9 +108,7 @@ def load_module_config(module: Union[ModuleType, str, list[str]]) -> dict:
     return conf
 
 
-def dump_module_config(
-    module: Union[ModuleType, str, list[str]], /, config: dict
-) -> None:
+def dump_module_config(module: ModuleLike, /, config: dict) -> None:
     r"""Dump ``gada.yml`` to a module installed in **PYTHONPATH**.
 
     This will raise **ModuleNotFoundError** if the module is not installed.

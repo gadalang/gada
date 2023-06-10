@@ -124,7 +124,7 @@ class Context(object):
 
     def vars(self) -> dict:
         """Return the variables stored in this context and the parent"""
-        d = (self._parent.vars() if self._parent else {})
+        d = self._parent.vars() if self._parent else {}
         d.update(self._vars)
         return d
 
@@ -231,9 +231,11 @@ class Context(object):
             param = params.get(k, None)
             if param is None:
                 raise Exception(f"unknown input {node.name}.{k}")
-            
+
             if not typing.isinstance(v, param.type):
-                raise Exception(f"invalid input for {node.name}.{k}: expected {param.type}, got {type(v)}")
+                raise Exception(
+                    f"invalid input for {node.name}.{k}: expected {param.type}, got {type(v)}"
+                )
 
     def _check_node_outputs(self, node: Node, /, outputs: dict) -> None:
         params = {_.name: _ for _ in node.outputs}
@@ -242,10 +244,11 @@ class Context(object):
             param = params.get(k, None)
             if param is None:
                 raise Exception(f"unknown output {node.name}.{k}")
-            
+
             if not typing.isinstance(v, param.type):
-                raise Exception(f"invalid output for {node.name}.{k}: expected {param.type}, got {type(v)}")
-            
+                raise Exception(
+                    f"invalid output for {node.name}.{k}: expected {param.type}, got {type(v)}"
+                )
 
     def _store(self, node: Node, step: NodeCall, /, outputs: dict) -> None:
         """Store results of step execution.

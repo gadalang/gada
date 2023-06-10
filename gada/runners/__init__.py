@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 __all__ = ["run", "load"]
-from gada.node import Node
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gada.nodeutil import NodeInfo
 
 
 def run(
-    node: Node,
+    node: NodeInfo,
     *,
     gada_config: dict,
     inputs: dict,

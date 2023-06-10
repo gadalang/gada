@@ -1,0 +1,7 @@
+type: object
+properties:
+  entrypoint:
+    type: string
+    description: Python function called by the runner
+required:
+- entrypoint

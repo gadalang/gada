@@ -1,52 +1,44 @@
-'''Tests on the ``gada.program.Context`` class'''
+"""Tests on the ``gada.program.Context`` class"""
 from __future__ import annotations
 from gada.node import Node, NodeCall, Param
 from gada import program
 
 
-CALL_NODE_A = NodeCall.from_config({
-    "name": "A",
-    "id": "a",
-    "inputs": {
-        "in": 1
-    }
-})
+CALL_NODE_A = NodeCall.from_config({"name": "A", "id": "a", "inputs": {"in": 1}})
 
-CALL_NODE_B = NodeCall.from_config({
-    "name": "B",
-    "id": "b",
-    "inputs": {
-        "in": "{{ a.out }}"
-    }
-})
+CALL_NODE_B = NodeCall.from_config(
+    {"name": "B", "id": "b", "inputs": {"in": "{{ a.out }}"}}
+)
+
 
 def MockContext(steps: list[NodeCall]) -> program.Context:
-    NODE_A = Node.from_config({
-        "name": "A",
-        "runner": "mock_runner",
-        "inputs": [{"name": "in", "type": "int"}],
-        "outputs": [{"name": "out", "type": "int"}]
-    })
+    NODE_A = Node.from_config(
+        {
+            "name": "A",
+            "runner": "mock_runner",
+            "inputs": [{"name": "in", "type": "int"}],
+            "outputs": [{"name": "out", "type": "int"}],
+        }
+    )
 
-    NODE_B = Node.from_config({
-        "name": "B",
-        "runner": "mock_runner",
-        "inputs": [{"name": "in", "type": "int"}],
-        "outputs": [{"name": "out", "type": "int"}]
-    })
-    
+    NODE_B = Node.from_config(
+        {
+            "name": "B",
+            "runner": "mock_runner",
+            "inputs": [{"name": "in", "type": "int"}],
+            "outputs": [{"name": "out", "type": "int"}],
+        }
+    )
+
     def run_a(inputs: dict) -> dict:
         return {"out": inputs.get("in", 0)}
 
     def run_b(inputs: dict) -> dict:
         return {"out": inputs.get("in", 0) + 1}
 
-    NODES = {
-        "A": (NODE_A, run_a),
-        "B": (NODE_B, run_b)
-    }
+    NODES = {"A": (NODE_A, run_a), "B": (NODE_B, run_b)}
 
-    class MockRunner():
+    class MockRunner:
         @staticmethod
         def run(node: Node, inputs: dict, **kwargs) -> dict:
             return NODES[node.name][1](inputs)
@@ -61,10 +53,7 @@ def MockContext(steps: list[NodeCall]) -> program.Context:
 
 
 def test_context():
-    cxt = MockContext([
-        CALL_NODE_A,
-        CALL_NODE_B
-    ])
+    cxt = MockContext([CALL_NODE_A, CALL_NODE_B])
 
     assert cxt.vars() == {}
     assert not cxt.parent

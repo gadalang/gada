@@ -15,9 +15,7 @@ from conftest import (
 def test_main():
     """Test calling main with a valid command."""
     # Run prog.yml
-    stdout, _ = main(
-        [PROG_PATH], has_stdout=True, has_stderr=False
-    )
+    stdout, _ = main([PROG_PATH], has_stdout=True, has_stderr=False)
 
     # Node should return "hello john !"
     assert stdout == "hello john !", "wrong output"
@@ -34,11 +32,13 @@ def test_main_remainder_args(self):
     # Node should return "hello john !"
     self.assertEqual(stdout, "hello john !", "wrong output")
 
+
 def test_main_invalid_command(self):
     """Test calling main with an invalid command."""
     # A valid command is component.node
     with self.assertRaises(Exception):
         self.main(["testnodes"])
+
 
 def test_main_no_runner(self):
     """Test calling main without configured runner."""
@@ -46,6 +46,7 @@ def test_main_no_runner(self):
 
     with self.assertRaises(Exception):
         self.main(["testnodes.hello"])
+
 
 def test_main_unknown_runner(self):
     """Test calling main with an unknown runner."""

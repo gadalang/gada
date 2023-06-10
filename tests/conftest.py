@@ -9,17 +9,19 @@ import functools
 import gada
 from gada import test_utils, _cache
 
-TESTNODES_PATH: Path = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), "testnodes")))
-'''Absolute path to ``gada/test/testnodes``'''
+TESTNODES_PATH: Path = Path(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "testnodes"))
+)
+"""Absolute path to ``gada/test/testnodes``"""
 
 CONFIG_PATH: Path = TESTNODES_PATH / "gada.yml"
-'''Absolute path to ``testnodes/gada.yml``'''
+"""Absolute path to ``testnodes/gada.yml``"""
 
 PROG_PATH: Path = TESTNODES_PATH / "prog.yml"
-'''Absolute path to ``testnodes/prog.yml``'''
+"""Absolute path to ``testnodes/prog.yml``"""
 
 GADA_CONFIG = {"bins": {}}
-'''Empty configuration for gada'''
+"""Empty configuration for gada"""
 
 CONFIG_NO_NODES = {"runner": "generic"}
 
@@ -113,13 +115,13 @@ def clean_test(fun):
         _cache.clear()
         del_module_config()
         del_prog_config()
-        
+
         return fun(*args, **kwargs)
 
     return wrapper
 
 
-def with_gada_config(_fun=None, config: dict=None):
+def with_gada_config(_fun=None, config: dict = None):
     def decorator(fun):
         @functools.wraps(fun)
         def wrapper(*args, **kwargs):
@@ -131,13 +133,13 @@ def with_gada_config(_fun=None, config: dict=None):
     return decorator if _fun is None else decorator(_fun)
 
 
-def with_module_config(_fun=None, config: dict=None):
+def with_module_config(_fun=None, config: dict = None):
     def decorator(fun):
         @functools.wraps(fun)
         def wrapper(*args, **kwargs):
             write_module_config(CONFIG_NO_NODES if config is None else config)
             return fun(*args, **kwargs)
-        
+
         return wrapper
 
     return decorator if _fun is None else decorator(_fun)
@@ -145,10 +147,10 @@ def with_module_config(_fun=None, config: dict=None):
 
 @pytest.fixture
 def module_config() -> dict:
-    '''Load the configuration from ``gada.yml``.
-    
+    """Load the configuration from ``gada.yml``.
+
     :return: configuration
-    '''
+    """
     return load_module_config()
 
 

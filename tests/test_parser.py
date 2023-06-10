@@ -1,4 +1,4 @@
-'''Tests on the ``gada.parser`` module'''
+"""Tests on the ``gada.parser`` module"""
 import pytest
 from gada import typing
 from gada import parser
@@ -22,16 +22,15 @@ def test_parse_float():
 def test_parse_float():
     _assert_parse_type(
         "(int, int, [[int | float]])",
-        typing.TupleType([
-            typing.IntType(),
-            typing.IntType(),
-            typing.ListType(
+        typing.TupleType(
+            [
+                typing.IntType(),
+                typing.IntType(),
                 typing.ListType(
-                    typing.UnionType([
-                        typing.IntType,
-                        typing.FloatType
-                    ])
-                )
-            )
-        ])
+                    typing.ListType(
+                        typing.UnionType([typing.IntType, typing.FloatType])
+                    )
+                ),
+            ]
+        ),
     )

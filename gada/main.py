@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 __all__ = ["run", "main"]
-import os
+from typing import TYPE_CHECKING
 import sys
-import io
 import argparse
-from typing import Optional
-from gada.program import Program
-from gada import datadir
+from gada import nodeutil, runners
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
@@ -24,7 +24,7 @@ def split_unknown_args(argv: list[str]) -> tuple[list[str], list[str]]:
     return argv, []
 
 
-def run(target: str, inputs: Optional[dict] = None) -> dict:
+def run(target: str, argv: list[str]) -> dict:
     """Run a Gada node or program.
 
     .. code-block:: python
@@ -36,23 +36,39 @@ def run(target: str, inputs: Optional[dict] = None) -> dict:
         >>>
 
     :param target: name of a node or path to a program
-    :param inputs: inputs passed to the node or program
+    :param argv: inputs passed to the node or program
     :return: node or program outputs
     """
-    # Load gada configuration
-    gada_config = datadir.load_config()
+    node = nodeutil.find_node(target)
+    if not node:
+        raise Exception(f"node {target} not found")
 
-    # Check command format
-    if not target.endswith(".yml"):
-        prog = Program.from_node(target)
-    else:
-        prog = Program.load(target)
+    parser = nodeutil.create_parser(node)
+    args = parser.parse_args(args=argv)
 
-    return prog.run(inputs=inputs)
+    runner = runners.load(node.config.get("runner", "pymodule"))
+    runner.run(node, inputs=vars(args))
+    return {}
+
+
+def list_packages() -> None:
+    for package in nodeutil.iter_packages():
+        print(package.name)
+
+
+def list_node() -> None:
+    for node in nodeutil.iter_nodes():
+        print(node.config["name"])
+
+
+def menu_callback(filenames, params: str) -> None:
+    print(filenames)
+    print(params)
+    sys.stdin.read(1)
 
 
 def main(
-    argv: Optional[list[str]] = None,
+    argv: list[str] | None = None,
     *,
     stdin=None,
     stdout=None,
@@ -65,19 +81,52 @@ def main(
     :param stdout: output stream
     :param stderr: error stream
     """
-    argv = sys.argv if argv is None else argv
-
     parser = argparse.ArgumentParser(prog="gada", description="Help")
-    parser.add_argument("target", type=str, help="target to run")
-    parser.add_argument(
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbosity level")
+    subparsers = parser.add_subparsers(help="sub-command help", required=True)
+
+    def parse_run(args):
+        node_argv, gada_argv = split_unknown_args(args.argv)
+
+        run(args.target, node_argv)
+
+    def parse_list_package(args):
+        list_packages()
+
+    def parse_list_node(args):
+        list_node()
+
+    def parse_install(args):
+        pass
+
+    run_parser = subparsers.add_parser("run", help="run a gada node")
+    run_parser.add_argument("target", type=str, help="gada node to run")
+    run_parser.add_argument(
         "argv", type=str, nargs=argparse.REMAINDER, help="additional CLI arguments"
     )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbosity level")
-    args = parser.parse_args(args=argv[1:])
-    node_argv, gada_argv = split_unknown_args(args.argv)
+    run_parser.set_defaults(func=parse_run)
 
-    run(target=args.target, argv=node_argv, stdin=stdin, stdout=stdout, stderr=stderr)
+    list_parser = subparsers.add_parser("list", help="list installed gada nodes")
+    list_subparsers = list_parser.add_subparsers(help="sub-command help")
+
+    list_package_parser = list_subparsers.add_parser(
+        "package", help="list installed gada packages"
+    )
+    list_package_parser.set_defaults(func=parse_list_package)
+
+    list_node_parser = list_subparsers.add_parser(
+        "node", help="list installed gada nodes"
+    )
+    list_node_parser.set_defaults(func=parse_list_node)
+
+    install_parser = subparsers.add_parser("install", help="install a gada node")
+    install_parser.add_argument("target", type=str, help="gada node to install")
+    install_parser.set_defaults(func=parse_install)
+
+    args = parser.parse_args()
+    args.func(args)
+    # run(target=args.target, argv=node_argv, stdin=stdin, stdout=stdout, stderr=stderr)
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

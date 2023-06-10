@@ -1,0 +1,20 @@
+runner: _gada
+nodes:
+  - name: list_packages
+    menu:
+      type:
+      - all
+      path:
+      - List Packages
+  - name: list_nodes
+    menu:
+      type:
+      - all
+      path:
+      - List Nodes
+  - name: rebuild
+    menu:
+      type:
+      - all
+      path:
+      - Rebuild

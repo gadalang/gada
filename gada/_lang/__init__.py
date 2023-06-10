@@ -1,23 +1,20 @@
 from __future__ import annotations
 
-__all__ = ["set", "print", "max", "min"]
+from typing import TYPE_CHECKING
 import builtins
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 def set(inputs: dict) -> dict:
     return {"out": inputs.get("in", None)}
 
 
-def print(inputs: dict) -> dict:
-    if "in" in inputs:
-        builtins.print(inputs["in"])
+def resize(
+    target: list[str], width: int | None = None, height: int | None = None
+) -> None:
+    print(target, width, height)
+    import sys
 
-    return {}
-
-
-def max(inputs: dict) -> dict:
-    return {"out": builtins.max(inputs.get("a", None), inputs.get("b", None))}
-
-
-def min(inputs: dict) -> dict:
-    return {"out": builtins.min(inputs.get("a", None), inputs.get("b", None))}
+    sys.stdin.read(1)

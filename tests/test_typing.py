@@ -1,4 +1,4 @@
-'''Tests on the ``gada.typing`` module'''
+"""Tests on the ``gada.typing`` module"""
 import pytest
 from gada import typing
 

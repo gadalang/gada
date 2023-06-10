@@ -1,0 +1,41 @@
+name: build
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.7", "3.8", "3.9"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install Tox and any other packages
+        run: |
+          python -m pip install -U pip
+          python -m pip install tox "coverage>=4.0,<4.4"
+      - name: Run Tox
+        run: |
+          mkdir -p .local/share/gada
+          tox -- -v --color=yes
+        env:
+          TOXENV: py${{ matrix.python-version}}-cov
+      - if: matrix.python-version == '3.9'
+        name: Publish coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
